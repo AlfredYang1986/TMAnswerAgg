@@ -125,7 +125,8 @@ package object TmIOAggregation {
                                         presets: List[DBObject],
                                         period: MongoDBObject,
                                         proposalId: String,
-                                        projectId: String
+                                        projectId: String,
+                                        needComp: Boolean = false
                                     ) : String = {
         val ra = answers.filter(_.get("category") == "Resource")
         val ma = answers.find(_.get("category") == "Management").get
@@ -234,21 +235,23 @@ package object TmIOAggregation {
         /**
           * 竞品表
           */
-        val bulk = collComp.initializeOrderedBulkOperation
-        products.filter(_.get("productType") == 1).foreach { x =>
-            val builder = MongoDBObject.newBuilder
-            val tmp = presets.find(_.get("product") == x.get("name")).get
-            builder += "job_id" -> jobId
-            builder += "project_id" -> projectId
-            builder += "period_id" -> period.get("_id").get.toString
+        if (needComp) {
+            val bulk = collComp.initializeOrderedBulkOperation
+            products.filter(_.get("productType") == 1).foreach { x =>
+                val builder = MongoDBObject.newBuilder
+                val tmp = presets.find(_.get("product") == x.get("name")).get
+                builder += "job_id" -> jobId
+                builder += "project_id" -> projectId
+                builder += "period_id" -> period.get("_id").get.toString
 
-            builder += "life_cycle" -> x.get("lifeCycle")
-            builder += "product" -> x.get("name")
-            builder += "p_share" -> tmp.get("share")
+                builder += "life_cycle" -> x.get("lifeCycle")
+                builder += "product" -> x.get("name")
+                builder += "p_share" -> tmp.get("share")
 
-            bulk.insert(builder.result)
+                bulk.insert(builder.result)
+            }
+            bulk.execute()
         }
-        bulk.execute()
 
         jobId
     }
