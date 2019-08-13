@@ -20,6 +20,7 @@ package object TmIOAggregation {
     val prodCollName = "products"
     val resCollName = "resources"
     val calCollName = "cal"
+    val calCompCollName = "cal_comp"
     val calReportCollName = "cal_report"
 
     lazy val client : MongoClient = MongoClient(mongodbHost, mongodbPort)
@@ -33,6 +34,7 @@ package object TmIOAggregation {
     lazy val collProd = db(prodCollName)
     lazy val collRes = db(resCollName)
     lazy val collCal = db(calCollName)
+    lazy val collComp = db(calCompCollName)
     lazy val collCalReport = db(calReportCollName)
 
     /**
@@ -228,6 +230,26 @@ package object TmIOAggregation {
 
             collCal.insert(builder.result())
         }
+
+        /**
+          * 竞品表
+          */
+        val bulk = collComp.initializeOrderedBulkOperation
+        products.filter(_.get("productType") == 1).foreach { x =>
+            val builder = MongoDBObject.newBuilder
+            val tmp = presets.find(_.get("product") == x.get("name")).get
+            builder += "job_id" -> jobId
+            builder += "project_id" -> projectId
+            builder += "period_id" -> period.get("_id").get.toString
+
+            builder += "life_cycle" -> x.get("lifeCycle")
+            builder += "product" -> x.get("name")
+            builder += "p_share" -> tmp.get("share")
+
+            bulk.insert(builder.result)
+        }
+        bulk.execute()
+
         jobId
     }
 
