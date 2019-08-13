@@ -20,6 +20,7 @@ package object TmIOAggregation {
     val prodCollName = "products"
     val resCollName = "resources"
     val calCollName = "cal"
+    val calReportCollName = "cal_report"
 
     lazy val client : MongoClient = MongoClient(mongodbHost, mongodbPort)
     lazy val db = client(ntmDBName)
@@ -32,6 +33,7 @@ package object TmIOAggregation {
     lazy val collProd = db(prodCollName)
     lazy val collRes = db(resCollName)
     lazy val collCal = db(calCollName)
+    lazy val collCalReport = db(calReportCollName)
 
     /**
       * 将用户的输入抽象统一成计算抽象
@@ -155,7 +157,7 @@ package object TmIOAggregation {
             builder += "employee_kpi_and_compliance_check" -> ma.get("kpiAnalysisTime")
             builder += "team_meeting" -> ma.get("teamMeetingTime")
 
-            builder += "period" -> period.get("_id").toString
+            builder += "period" -> period.get("_id").get.toString
             builder += "project" -> projectId
             builder += "job" -> jobId
             x.getAs[ObjectId]("resource") match {
@@ -229,7 +231,57 @@ package object TmIOAggregation {
         jobId
     }
 
+    /**
+      * 根据TM R 返回的数据，重新写入数据库操作
+      * @param uid
+      * @return
+      */
     def TmResultAgg(uid: String): String = {
-        null
+        var period: Option[DBObject] = None
+        val bulk = collPreset.initializeOrderedBulkOperation
+        val ids = collCalReport.filter(_.get("job_id") == uid).map { x =>
+            /**
+              * 1. query当前计算的period
+              */
+            if (period isEmpty) {
+                val builder = MongoDBObject.newBuilder
+                builder += "_id" -> new ObjectId(x.get("period_id").toString)
+                period = collPeriod.findOne(builder.result)
+            }
+
+            /**
+              * 2. 形成基于产品以及医院的presets
+              */
+            val id = new ObjectId()
+            val builder = MongoDBObject.newBuilder
+            builder += "_id" -> id
+            builder += "hospital" -> x.get("dest_id")
+            builder += "product" -> x.get("good_id")
+            builder += "resource" -> x.get("representative_id")
+
+            builder += "salesQuota" -> x.get("quota")
+            builder += "achievements" -> x.get("sales")
+            builder += "share" -> x.get("share")
+
+            builder += "potential" -> x.get("potential")
+            builder += "territoryManagementAbility" -> x.get("territory_management_ability")
+            builder += "salesSkills" -> x.get("sales_skills")
+            builder += "productKnowledge" -> x.get("product_knowledge")
+            builder += "behaviorEfficiency" -> x.get("behavior_efficiency")
+            builder += "workMotivation" -> x.get("work_motivation")
+
+            bulk.insert(builder.result)
+            id
+        }
+        /**
+          * 3. 将presets写入
+          */
+        val bulkResult = bulk.execute()
+        if (bulkResult.isAcknowledged && bulkResult.getInsertedCount > 0) {
+            period.get += "presets" -> ids.toList
+            collPeriod.update(DBObject("_id" -> period.get.get("_id")), period.get)
+        }
+
+        uid
     }
 }
