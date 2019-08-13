@@ -192,6 +192,9 @@ package object TmIOAggregation {
                     }
                 }
                 case None => {
+                    builder += "representative_id" -> ""
+                    builder += "representative" -> ""
+
                     builder += "product_knowledge_training" -> 0
                     builder += "career_development_guide" -> 0
                     builder += "territory_management_training" -> 0
@@ -199,6 +202,12 @@ package object TmIOAggregation {
                     builder += "sales_skills_training" -> 0
                     builder += "field_work" -> 0
                     builder += "one_on_one_coaching" -> 0
+
+                    builder += "p_territory_management_ability" -> "0"
+                    builder += "p_sales_skills" -> "0"
+                    builder += "p_product_knowledge" -> "0"
+                    builder += "p_behavior_efficiency" -> "0"
+                    builder += "p_work_motivation" -> "0"
                 }
             }
 
