@@ -221,11 +221,13 @@ package object TmIOAggregation {
                     builder += "p_sales" -> ps.get("achievements")
                     builder += "p_quota" -> ps.get("salesQuota")
                     builder += "p_share" -> ps.get("share")
+                    builder += "potential" -> ps.get("potential")
                 }
                 case None => {
                     builder += "p_sales" -> "0"
                     builder += "p_quota" -> "0"
                     builder += "p_share" -> "0.0"
+                    builder += "potential" -> "0.0"
                 }
             }
 
