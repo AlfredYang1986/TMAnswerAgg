@@ -23,7 +23,7 @@ package object TmIOAggregation {
     val calCompCollName = "cal_comp"
     val calReportCollName = "cal_report"
 
-    lazy val client : MongoClient = MongoClient(mongodbHost, mongodbPort)
+    lazy val client: MongoClient = MongoClient(mongodbHost, mongodbPort)
     lazy val db = client(ntmDBName)
     lazy val collAnswer = db(answerCollName)
     lazy val collPreset = db(presetCollName)
@@ -39,11 +39,12 @@ package object TmIOAggregation {
 
     /**
       * 将用户的输入抽象统一成计算抽象
+      *
       * @param proposalId
       * @param periodId
       * @return
       */
-    def TmInputAgg(proposalId: String, projectId: String, periodId: String) : String = {
+    def TmInputAgg(proposalId: String, projectId: String, periodId: String): String = {
         val builder = MongoDBObject.newBuilder
         builder += "_id" -> new ObjectId(periodId)
         collPeriod.findOne(builder.result) match {
@@ -65,15 +66,15 @@ package object TmIOAggregation {
         }
     }
 
-    def infoWithProposal(proposalId: String) : (List[DBObject], List[DBObject], List[DBObject]) = {
+    def infoWithProposal(proposalId: String): (List[DBObject], List[DBObject], List[DBObject]) = {
         val builder = MongoDBObject.newBuilder
         builder += "_id" -> new ObjectId(proposalId)
         collProposal.findOne(builder.result) match {
             case Some(p) => {
                 (
-                    hospWithProposal(p.getAs[List[String]]("targets").get.map(new ObjectId(_))),
-                    productsWithProposal(p.getAs[List[String]]("products").get.map(new ObjectId(_))),
-                    resourcesWithProposal(p.getAs[List[String]]("resources").get.map(new ObjectId(_)))
+                        hospWithProposal(p.getAs[List[String]]("targets").get.map(new ObjectId(_))),
+                        productsWithProposal(p.getAs[List[String]]("products").get.map(new ObjectId(_))),
+                        resourcesWithProposal(p.getAs[List[String]]("resources").get.map(new ObjectId(_)))
                 )
             }
             case None => (Nil, Nil, Nil)
@@ -108,26 +109,25 @@ package object TmIOAggregation {
         }
     }
 
-    def presetWithProposal(ids: List[ObjectId]) : List[DBObject] =
+    def presetWithProposal(ids: List[ObjectId]): List[DBObject] =
         collPreset.find($or(ids.map(x => DBObject("_id" -> x)))).toList
 
-    def hospWithProposal(ids: List[ObjectId]) : List[DBObject] =
+    def hospWithProposal(ids: List[ObjectId]): List[DBObject] =
         collHosp.find($or(ids.map(x => DBObject("_id" -> x)))).toList
 
-    def productsWithProposal(ids: List[ObjectId]) : List[DBObject] =
+    def productsWithProposal(ids: List[ObjectId]): List[DBObject] =
         collProd.find($or(ids.map(x => DBObject("_id" -> x)))).toList
 
-    def resourcesWithProposal(ids: List[ObjectId]) : List[DBObject] =
+    def resourcesWithProposal(ids: List[ObjectId]): List[DBObject] =
         collRes.find($or(ids.map(x => DBObject("_id" -> x)))).toList
 
     def aggAnswerWithPresetsToTmJobs(
-                                        answers: List[DBObject],
-                                        presets: List[DBObject],
-                                        period: MongoDBObject,
-                                        proposalId: String,
-                                        projectId: String,
-                                        needComp: Boolean = false
-                                    ) : String = {
+                                            answers: List[DBObject],
+                                            presets: List[DBObject],
+                                            period: MongoDBObject,
+                                            proposalId: String,
+                                            projectId: String
+                                    ): String = {
         val ra = answers.filter(_.get("category") == "Resource")
         val ma = answers.find(_.get("category") == "Management").get
         val ba = answers.filter(_.get("category") == "Business")
@@ -160,9 +160,9 @@ package object TmIOAggregation {
             builder += "employee_kpi_and_compliance_check" -> ma.get("kpiAnalysisTime")
             builder += "team_meeting" -> ma.get("teamMeetingTime")
 
-            builder += "period" -> period.get("_id").get.toString
-            builder += "project" -> projectId
-            builder += "job" -> jobId
+            builder += "period_id" -> period.get("_id").get.toString
+            builder += "project_id" -> projectId
+            builder += "job_id" -> jobId
             x.getAs[ObjectId]("resource") match {
                 case Some(id) => {
                     val rat = ra.find(_.get("resource") == id).get
@@ -251,29 +251,38 @@ package object TmIOAggregation {
         /**
           * 竞品表
           */
-        if (needComp) {
-            val bulk = collComp.initializeOrderedBulkOperation
-            products.filter(_.get("productType") == 1).foreach { x =>
-                val builder = MongoDBObject.newBuilder
-                val tmp = presets.find(_.get("product") == x.get("name")).get
-                builder += "job_id" -> jobId
-                builder += "project_id" -> projectId
-                builder += "period_id" -> period.get("_id").get.toString
+        val bulk = collComp.initializeOrderedBulkOperation
+        products.filter(_.get("productType") == 1).foreach { x =>
+            val builder = MongoDBObject.newBuilder
+            val tmp = presets.find(_.get("product") == x.get("name"))
+            tmp match {
+                case Some(s) =>
+                    builder += "job_id" -> jobId
+                    builder += "project_id" -> projectId
+                    builder += "period_id" -> period.get("_id").get.toString
 
-                builder += "life_cycle" -> x.get("lifeCycle")
-                builder += "product" -> x.get("name")
-                builder += "p_share" -> tmp.get("share")
+                    builder += "life_cycle" -> x.get("lifeCycle")
+                    builder += "product" -> x.get("name")
+                    builder += "p_share" -> s.get("share")
+                    bulk.insert(builder.result)
+                case _ =>
+                    builder += "job_id" -> jobId
+                    builder += "project_id" -> projectId
+                    builder += "period_id" -> period.get("_id").get.toString
 
-                bulk.insert(builder.result)
+                    builder += "life_cycle" -> x.get("lifeCycle")
+                    builder += "product" -> x.get("name")
+                    builder += "p_share" -> 0
+                    bulk.insert(builder.result)
             }
-            bulk.execute()
         }
-
+        bulk.execute()
         jobId
     }
 
     /**
       * 根据TM R 返回的数据，重新写入数据库操作
+      *
       * @param uid
       * @return
       */
@@ -281,6 +290,7 @@ package object TmIOAggregation {
         var period: Option[DBObject] = None
         val bulk = collPreset.initializeOrderedBulkOperation
         val ids = collCalReport.filter(_.get("job_id") == uid).map { x =>
+
             /**
               * 1. query当前计算的period
               */
