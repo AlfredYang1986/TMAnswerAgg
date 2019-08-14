@@ -170,6 +170,7 @@ package object TmIOAggregation {
                     builder += "representative_id" -> id.toString
                     val r = resources.find(_.get("_id") == id).get
                     builder += "representative" -> r.get("name")
+                    builder += "representative_time" -> r.get("totalTime")
 
                     builder += "product_knowledge_training" -> rat.get("productKnowledgeTraining")
                     builder += "career_development_guide" -> rat.get("vocationalDevelopment")
@@ -199,6 +200,7 @@ package object TmIOAggregation {
                 case None => {
                     builder += "representative_id" -> ""
                     builder += "representative" -> ""
+                    builder += "representative_time" -> 0
 
                     builder += "product_knowledge_training" -> 0
                     builder += "career_development_guide" -> 0
