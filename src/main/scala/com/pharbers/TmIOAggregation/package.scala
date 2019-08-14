@@ -224,12 +224,24 @@ package object TmIOAggregation {
                     builder += "p_quota" -> ps.get("salesQuota")
                     builder += "p_share" -> ps.get("share")
                     builder += "potential" -> ps.get("potential")
+
+                    builder += "p_target" -> ps.get("target")
+                    builder += "p_target_coverage" -> ps.get("targetCoverage")
+                    builder += "p_high_target" -> ps.get("highTarget")
+                    builder += "p_middle_target" -> ps.get("middleTarget")
+                    builder += "p_low_target" -> ps.get("lowTarget")
                 }
                 case None => {
                     builder += "p_sales" -> "0"
                     builder += "p_quota" -> "0"
                     builder += "p_share" -> "0.0"
                     builder += "potential" -> "0.0"
+
+                    builder += "p_target" -> "0"
+                    builder += "p_target_coverage" -> "0"
+                    builder += "p_high_target" -> "0"
+                    builder += "p_middle_target" -> "0"
+                    builder += "p_low_target" -> "0"
                 }
             }
 
