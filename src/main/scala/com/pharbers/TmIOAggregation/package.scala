@@ -238,7 +238,7 @@ package object TmIOAggregation {
 
             presets.find(x => x.get("hospital") == h.get("_id") && x.get("product") == p.get("_id")) match {
                 case Some(ps) => {
-                    builder += "p_sales" -> ps.get("achievements")
+                    builder += "p_sales" -> ps.get("sales")
                     builder += "p_quota" -> ps.get("salesQuota")
                     builder += "p_share" -> ps.get("share")
                     builder += "potential" -> ps.get("potential")
