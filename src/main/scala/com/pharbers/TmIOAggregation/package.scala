@@ -72,9 +72,9 @@ package object TmIOAggregation {
         collProposal.findOne(builder.result) match {
             case Some(p) => {
                 (
-                        hospWithProposal(p.getAs[List[String]]("targets").get.map(new ObjectId(_))),
-                        productsWithProposal(p.getAs[List[String]]("products").get.map(new ObjectId(_))),
-                        resourcesWithProposal(p.getAs[List[String]]("resources").get.map(new ObjectId(_)))
+                    hospWithProposal(p.getAs[List[ObjectId]]("targets").get),
+                    productsWithProposal(p.getAs[List[ObjectId]]("products").get),
+                    resourcesWithProposal(p.getAs[List[ObjectId]]("resources").get)
                 )
             }
             case None => (Nil, Nil, Nil)
@@ -187,6 +187,12 @@ package object TmIOAggregation {
                             builder += "p_product_knowledge" -> pr.get("productKnowledge")
                             builder += "p_behavior_efficiency" -> pr.get("behaviorEfficiency")
                             builder += "p_work_motivation" -> pr.get("workMotivation")
+
+                            builder += "p_target" -> pr.get("targetDoctorNum")
+                            builder += "p_target_coverage" -> pr.get("targetDoctorCoverage")
+                            builder += "p_high_target" -> pr.get("highTarget")
+                            builder += "p_middle_target" -> pr.get("middleTarget")
+                            builder += "p_low_target" -> pr.get("lowTarget")
                         }
                         case None => {
                             builder += "p_territory_management_ability" -> "0"
@@ -194,6 +200,12 @@ package object TmIOAggregation {
                             builder += "p_product_knowledge" -> "0"
                             builder += "p_behavior_efficiency" -> "0"
                             builder += "p_work_motivation" -> "0"
+
+                            builder += "p_target" -> "0"
+                            builder += "p_target_coverage" -> "0"
+                            builder += "p_high_target" -> "0"
+                            builder += "p_middle_target" -> "0"
+                            builder += "p_low_target" -> "0"
                         }
                     }
                 }
@@ -215,33 +227,27 @@ package object TmIOAggregation {
                     builder += "p_product_knowledge" -> "0"
                     builder += "p_behavior_efficiency" -> "0"
                     builder += "p_work_motivation" -> "0"
-                }
-            }
-
-            presets.find(x => x.get("hospital") == h.get("_id") && x.get("product") == p.get("id")) match {
-                case Some(ps) => {
-                    builder += "p_sales" -> ps.get("achievements")
-                    builder += "p_quota" -> ps.get("salesQuota")
-                    builder += "p_share" -> ps.get("share")
-                    builder += "potential" -> ps.get("potential")
-
-                    builder += "p_target" -> ps.get("target")
-                    builder += "p_target_coverage" -> ps.get("targetCoverage")
-                    builder += "p_high_target" -> ps.get("highTarget")
-                    builder += "p_middle_target" -> ps.get("middleTarget")
-                    builder += "p_low_target" -> ps.get("lowTarget")
-                }
-                case None => {
-                    builder += "p_sales" -> "0"
-                    builder += "p_quota" -> "0"
-                    builder += "p_share" -> "0.0"
-                    builder += "potential" -> "0.0"
 
                     builder += "p_target" -> "0"
                     builder += "p_target_coverage" -> "0"
                     builder += "p_high_target" -> "0"
                     builder += "p_middle_target" -> "0"
                     builder += "p_low_target" -> "0"
+                }
+            }
+
+            presets.find(x => x.get("hospital") == h.get("_id") && x.get("product") == p.get("_id")) match {
+                case Some(ps) => {
+                    builder += "p_sales" -> ps.get("achievements")
+                    builder += "p_quota" -> ps.get("salesQuota")
+                    builder += "p_share" -> ps.get("share")
+                    builder += "potential" -> ps.get("potential")
+                }
+                case None => {
+                    builder += "p_sales" -> "0"
+                    builder += "p_quota" -> "0"
+                    builder += "p_share" -> "0.0"
+                    builder += "potential" -> "0.0"
                 }
             }
 
