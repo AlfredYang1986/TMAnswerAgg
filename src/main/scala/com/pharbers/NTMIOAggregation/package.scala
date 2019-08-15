@@ -11,7 +11,7 @@ package object NTMIOAggregation {
     val mongodbPort = 27017
     val mongodbUsername = ""
     val mongodbPassword = ""
-    val ntmDBName = "pharbers-ntm-client"
+    val ntmDBName = "pharbers-ntm-client-4"
     val answerCollName = "answers"
     val presetCollName = "presets"
     val periodCollName = "periods"
@@ -23,6 +23,8 @@ package object NTMIOAggregation {
     val calCollName = "cal"
     val calCompCollName = "cal_comp"
     val calReportCollName = "cal_report"
+    val reportCollName = "reports"
+    val showReportCollName = "show_reports"
 
     lazy val client : MongoClient = MongoClient(mongodbHost, mongodbPort)
     lazy val db = client(ntmDBName)
@@ -37,6 +39,8 @@ package object NTMIOAggregation {
     lazy val collCal = db(calCollName)
     lazy val collComp = db(calCompCollName)
     lazy val collCalReport = db(calReportCollName)
+    lazy val collReports = db(reportCollName)
+    lazy val collShowReports = db(showReportCollName)
 
     /**
       * 将用户的输入抽象统一成计算抽象
@@ -275,4 +279,92 @@ package object NTMIOAggregation {
         jobId
     }
 
+    def BusinessPresetReport(hosps: List[DBObject], products: List[DBObject], jobId: String, report: DBObject): DBObject = {
+        val builder = MongoDBObject.newBuilder
+
+        builder += "job_id" -> jobId
+        builder += "category" -> "Hospital"
+
+        val h = hosps.find(_.get("_id") == report.get("hospital")).get
+        builder += "hospital" -> h.get("name")
+        builder += "hospital_level" -> h.get("level")
+
+        builder += "budget" -> 5000
+        builder += "meeting_attendance" -> 0
+
+        val p = products.find(_.get("_id") == report.get("product")).get
+        builder += "product" -> p.get("name")
+        builder += "life_cycle" -> p.get("lifeCycle")
+
+//        builder += "quota" -> 0
+//        builder += "call_time" -> 0
+//        builder += "one_on_one_coaching" -> 0
+//        builder += "field_work" -> 0
+//        builder += "performance_review" -> 0
+//        builder += "product_knowledge_training" -> 0
+//        builder += "territory_management_training" -> 0
+//
+        builder += "representative" -> ""
+//        builder += "representative_time" -> 0
+//        builder += "sales_skills_training" -> 0
+//        builder += "career_development_guide" -> 0
+//        builder += "employee_kpi_and_compliance_check" -> 0
+//        builder += "admin_work" -> 0
+//        builder += "kol_management" -> 0
+//        builder += "business_strategy_planning" -> 0
+//        builder += "team_meeting" -> 0
+        builder += "potential" -> report.get("potential")
+//        builder += "p_sales" -> 0
+//        builder += "p_share" -> 0
+//        builder += "p_territory_management_ability" -> 0
+//        builder += "p_sales_skills" -> 0
+//        builder += "p_product_knowledge" -> 0
+//        builder += "p_behavior_efficiency" -> 0
+//        builder += "p_work_motivation" -> 0
+//        builder += "total_potential" -> 0
+//        builder += "total_p_sales" -> 0
+//        builder += "total_quota" -> 0
+//        builder += "total_place" -> 0
+//        builder += "manager_time" -> 0
+        builder += "work_motivation" -> 0
+        builder += "territory_management_ability" -> 0
+        builder += "sales_skills" -> 0
+        builder += "product_knowledge" -> 0
+        builder += "behavior_efficiency" -> 0
+        builder += "general_ability" -> 0
+//        builder += "target" -> 0
+//        builder += "target_coverage" -> 0
+//        builder += "high_target" -> 0
+//        builder += "middle_target" -> 0
+//        builder += "low_target" -> 0
+        builder += "share" -> report.get("share")
+        builder += "sales" -> report.get("sales")
+
+        builder.result()
+    }
+
+    /**
+      * TmReportAgg
+      */
+    def TmReportAgg(proposalId: String, projectId: String, periodId: String): String = {
+        /**
+          * 1. get all the data in the proposal
+          */
+        val jobId = UUID.randomUUID().toString
+        val (hosps, products, resources) = infoWithProposal(proposalId)
+
+        val bulk = collShowReports.initializeOrderedBulkOperation
+        val builder = MongoDBObject.newBuilder
+        builder += "proposalId" -> proposalId
+        collReports.find(builder.result).toList.map { x =>
+
+            builder += "job_id" -> jobId
+
+            if (x.get("category") == "Hospital")
+                bulk.insert(BusinessPresetReport(hosps, products, jobId, x))
+
+        }
+        bulk.execute()
+        jobId
+    }
 }
