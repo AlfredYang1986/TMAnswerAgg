@@ -172,11 +172,11 @@ package object TmIOAggregation {
                     builder += "representative" -> r.get("name")
                     builder += "representative_time" -> r.get("totalTime")
 
-                    builder += "product_knowledge_training" -> rat.get("productKnowledgeTraining")
-                    builder += "career_development_guide" -> rat.get("vocationalDevelopment")
-                    builder += "territory_management_training" -> rat.get("regionTraining")
-                    builder += "performance_review" -> rat.get("performanceTraining")
-                    builder += "sales_skills_training" -> rat.get("salesAbilityTraining")
+                    builder += "product_knowledge_training" -> (if (rat.get("productKnowledgeTraining").asInstanceOf[Int].equals(-1)) 0 else 1)
+                    builder += "career_development_guide" -> (if (rat.get("vocationalDevelopment").asInstanceOf[Int].equals(-1)) 0 else 1)
+                    builder += "territory_management_training" -> (if (rat.get("regionTraining").asInstanceOf[Int].equals(-1)) 0 else 1)
+                    builder += "performance_review" -> (if (rat.get("performanceTraining").asInstanceOf[Int].equals(-1)) 0 else 1)
+                    builder += "sales_skills_training" -> (if (rat.get("salesAbilityTraining").asInstanceOf[Int].equals(-1)) 0 else 1)
                     builder += "field_work" -> rat.get("assistAccessTime")
                     builder += "one_on_one_coaching" -> rat.get("abilityCoach")
 
@@ -269,7 +269,7 @@ package object TmIOAggregation {
 
                     builder += "life_cycle" -> x.get("lifeCycle")
                     builder += "product" -> x.get("name")
-                    builder += "p_share" -> s.get("share")
+                    builder += "p_share" -> (if(x.get("name") == "西泰来") 0.18 else if(x.get("name") == "普纳林") 0.06 else 0)
                     bulk.insert(builder.result)
                 case _ =>
                     builder += "job_id" -> jobId

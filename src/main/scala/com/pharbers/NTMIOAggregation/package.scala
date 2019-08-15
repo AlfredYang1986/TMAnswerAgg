@@ -156,9 +156,9 @@ package object NTMIOAggregation {
             builder += "employee_kpi_and_compliance_check" -> ma.get("kpiAnalysisTime")
             builder += "team_meeting" -> ma.get("teamMeetingTime")
 
-            builder += "period" -> period.get("_id").get.toString
-            builder += "project" -> projectId
-            builder += "job" -> jobId
+            builder += "period_id" -> period.get("_id").get.toString
+            builder += "project_id" -> projectId
+            builder += "job_id" -> jobId
 
             x.getAs[ObjectId]("resource") match {
                 case Some(id) => {
