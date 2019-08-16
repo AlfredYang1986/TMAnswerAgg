@@ -109,6 +109,13 @@ package object NTMIOAggregation {
         lp ::: pp
     }
 
+    def currentPeriodPreset(proposalId: String, phase: Int = 0): List[DBObject] = {
+        val builder = MongoDBObject.newBuilder
+        builder += "proposalId" -> proposalId
+        builder += "phase" -> phase
+        collPreset.find(builder.result).toList
+    }
+
     def presetWithIds(ids: List[ObjectId]) : List[DBObject] =
         collPreset.find($or(ids.map(x => DBObject("_id" -> x)))).toList
 
@@ -243,16 +250,28 @@ package object NTMIOAggregation {
                     builder += "p_quota" -> ps.get("salesQuota")
                     builder += "p_share" -> ps.get("share")
                     builder += "potential" -> ps.get("potential")
-                    builder += "patient" -> ps.get("patientNum")
                 }
                 case None => {
                     builder += "p_sales" -> "0"
                     builder += "p_quota" -> "0"
                     builder += "p_share" -> "0.0"
                     builder += "potential" -> "0.0"
+                }
+            }
+
+            currentPeriodPreset(proposalId, 0).
+                find(x => x.get("hospital") == h.get("_id") && x.get("product") == p.get("_id")) match {
+
+                case Some(ps) => {
+                    builder += "patient" -> ps.get("patientNum")
+                }
+                case None => {
                     builder += "patient" -> "0"
                 }
             }
+
+            builder += "hosp_num" -> 30
+            builder += "rep_num" -> 6
 
             collCal.insert(builder.result())
         }
@@ -281,6 +300,12 @@ package object NTMIOAggregation {
         jobId
     }
 
+    def queryNumSafe(x: AnyRef): Double = {
+        if (x == null) 0.0
+        else x.toString.toDouble
+    }
+
+
     def periodPresetReport(
                               hosps: List[DBObject],
                               products: List[DBObject],
@@ -291,11 +316,12 @@ package object NTMIOAggregation {
 
         builder += "job_id" -> jobId
         builder += "category" -> report.get("category")
-        builder += "share" -> report.getAs[Double]("share").getOrElse(0.0)
-        builder += "sales" -> report.getAs[Double]("sales").getOrElse(0.0)
-        builder += "quota" -> report.getAs[Double]("quota").getOrElse(0.0)
+        builder += "share" -> queryNumSafe(report.get("share"))
+
+        builder += "sales" -> queryNumSafe(report.get("sales"))
+        builder += "quota" -> queryNumSafe(report.get("quota"))
         builder += "budget" -> 0.0
-        builder += "potential" -> report.getAs[Double]("potential").getOrElse(0.0)
+        builder += "potential" -> queryNumSafe(report.get("potential"))
         builder += "phase" -> report.get("phase")
 
         hosps.find(_.get("_id") == report.get("hospital")) match {
@@ -325,11 +351,16 @@ package object NTMIOAggregation {
                 builder += "representative" -> r.get("name")
                 builder += "representative_time" -> 0.0
 
-                builder += "work_motivation" -> report.getAs[Double]("workMotivation").getOrElse(0.0)
-                builder += "territory_management_ability" -> report.getAs[Double]("territoryManagementAbility").getOrElse(0.0)
-                builder += "sales_skills" -> report.getAs[Double]("salesSkills").getOrElse(0.0)
-                builder += "product_knowledge" -> report.getAs[Double]("productKnowledge").getOrElse(0.0)
-                builder += "behavior_efficiency" -> report.getAs[Double]("behaviorEfficiency").getOrElse(0.0)
+//                builder += "work_motivation" -> report.getAs[Double]("workMotivation").getOrElse(0.0)
+                builder += "work_motivation" -> queryNumSafe(report.get("workMotivation"))
+//                builder += "territory_management_ability" -> report.getAs[Double]("territoryManagementAbility").getOrElse(0.0)
+                builder += "territory_management_ability" -> queryNumSafe(report.get("territoryManagementAbility"))
+//                builder += "sales_skills" -> report.getAs[Double]("salesSkills").getOrElse(0.0)
+                builder += "sales_skills" -> queryNumSafe(report.get("salesSkills"))
+//                builder += "product_knowledge" -> report.getAs[Double]("productKnowledge").getOrElse(0.0)
+                builder += "product_knowledge" -> queryNumSafe(report.get("productKnowledge"))
+//                builder += "behavior_efficiency" -> report.getAs[Double]("behaviorEfficiency").getOrElse(0.0)
+                builder += "behavior_efficiency" -> queryNumSafe(report.get("behaviorEfficiency"))
             }
             case None => {
                 builder += "representative" -> ""
@@ -342,6 +373,7 @@ package object NTMIOAggregation {
                 builder += "behavior_efficiency" -> 0.0
             }
         }
+
 
         builder.result()
     }
