@@ -292,7 +292,7 @@ package object NTMIOAggregation {
         builder += "job_id" -> jobId
         builder += "category" -> report.get("category")
         builder += "share" -> report.getAs[Double]("share").getOrElse(0.0)
-        builder += "sales" -> report.get("sales")
+        builder += "sales" -> report.getAs[Double]("sales").getOrElse(0.0)
         builder += "quota" -> report.getAs[Double]("quota").getOrElse(0.0)
         builder += "budget" -> 0.0
         builder += "potential" -> report.get("potential")
