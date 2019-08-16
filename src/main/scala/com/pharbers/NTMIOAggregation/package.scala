@@ -292,7 +292,7 @@ package object NTMIOAggregation {
         builder += "share" -> report.get("share")
         builder += "sales" -> report.get("sales")
         builder += "quota" -> report.get("quota")
-        builder += "budget" -> 0
+        builder += "budget" -> 0.0
         builder += "potential" -> report.get("potential")
 
         hosps.find(_.get("_id") == report.get("hospital")) match {
@@ -330,13 +330,13 @@ package object NTMIOAggregation {
             }
             case None => {
                 builder += "representative" -> ""
-                builder += "representative_time" -> 0
+                builder += "representative_time" -> 0.0
 
-                builder += "work_motivation" -> 0
-                builder += "territory_management_ability" -> 0
-                builder += "sales_skills" -> 0
-                builder += "product_knowledge" -> 0
-                builder += "behavior_efficiency" -> 0
+                builder += "work_motivation" -> 0.0
+                builder += "territory_management_ability" -> 0.0
+                builder += "sales_skills" -> 0.0
+                builder += "product_knowledge" -> 0.0
+                builder += "behavior_efficiency" -> 0.0
             }
         }
 
