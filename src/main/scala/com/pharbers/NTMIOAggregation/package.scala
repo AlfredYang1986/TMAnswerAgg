@@ -11,7 +11,7 @@ package object NTMIOAggregation {
     val mongodbPort = 27017
     val mongodbUsername = ""
     val mongodbPassword = ""
-    val ntmDBName = "pharbers-ntm-client"
+    val ntmDBName = "pharbers-ntm-client-5"
     val answerCollName = "answers"
     val presetCollName = "presets"
     val periodCollName = "periods"
@@ -295,7 +295,8 @@ package object NTMIOAggregation {
         builder += "sales" -> report.getAs[Double]("sales").getOrElse(0.0)
         builder += "quota" -> report.getAs[Double]("quota").getOrElse(0.0)
         builder += "budget" -> 0.0
-        builder += "potential" -> report.get("potential")
+        builder += "potential" -> report.getAs[Double]("potential").getOrElse(0.0)
+        builder += "phase" -> report.get("phase")
 
         hosps.find(_.get("_id") == report.get("hospital")) match {
             case Some(h) => {
@@ -322,7 +323,7 @@ package object NTMIOAggregation {
         resources.find(_.get("_id") == report.get("resource")) match {
             case Some(r) => {
                 builder += "representative" -> r.get("name")
-                builder += "representative_time" -> 0
+                builder += "representative_time" -> 0.0
 
                 builder += "work_motivation" -> report.getAs[Double]("workMotivation").getOrElse(0.0)
                 builder += "territory_management_ability" -> report.getAs[Double]("territoryManagementAbility").getOrElse(0.0)
