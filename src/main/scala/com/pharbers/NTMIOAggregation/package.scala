@@ -321,13 +321,22 @@ package object NTMIOAggregation {
             case Some(r) => {
                 builder += "representative" -> r.get("name")
                 builder += "representative_time" -> 0
-            }
-            case None => {
+
                 builder += "work_motivation" -> report.get("workMotivation")
                 builder += "territory_management_ability" -> report.get("territoryManagementAbility")
                 builder += "sales_skills" -> report.get("salesSkills")
                 builder += "product_knowledge" -> report.get("productKnowledge")
                 builder += "behavior_efficiency" -> report.get("behaviorEfficiency")
+            }
+            case None => {
+                builder += "representative" -> ""
+                builder += "representative_time" -> 0
+
+                builder += "work_motivation" -> 0
+                builder += "territory_management_ability" -> 0
+                builder += "sales_skills" -> 0
+                builder += "product_knowledge" -> 0
+                builder += "behavior_efficiency" -> 0
             }
         }
 
