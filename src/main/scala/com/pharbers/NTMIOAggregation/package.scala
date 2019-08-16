@@ -322,7 +322,14 @@ package object NTMIOAggregation {
 
                 builder += "life_cycle" -> x.get("lifeCycle")
                 builder += "product" -> x.get("name")
-                builder += "p_share" -> tmp.get("share")
+
+                collProposal.findOne(DBObject("_id"->new ObjectId(proposalId))) match {
+                    case Some(p) => {
+                        if (p.get("case") == "tm") builder += "p_share" -> tmp.get("share")
+                        else builder += "market_share_c" -> tmp.get("share")
+                    }
+                    case None => ???
+                }
 
                 bulk.insert(builder.result)
             }
@@ -351,7 +358,7 @@ package object NTMIOAggregation {
         builder += "share" -> queryNumSafe(report.get("share"))
 
         builder += "sales" -> queryNumSafe(report.get("sales"))
-        builder += "quota" -> queryNumSafe(report.get("quota"))
+        builder += "quota" -> queryNumSafe(report.get("salesQuota"))
         builder += "budget" -> 0.0
         builder += "potential" -> queryNumSafe(report.get("potential"))
         builder += "phase" -> report.get("phase")
