@@ -11,7 +11,7 @@ package object NTMIOAggregation {
     val mongodbPort = 27017
     val mongodbUsername = ""
     val mongodbPassword = ""
-    val ntmDBName = "pharbers-ntm-client-5"
+    val ntmDBName = "pharbers-ntm-client"
     val answerCollName = "answers"
     val presetCollName = "presets"
     val periodCollName = "periods"
@@ -109,6 +109,13 @@ package object NTMIOAggregation {
         lp ::: pp
     }
 
+    def lastYearPreset(proposalId: String, phase: Int = 0): List[DBObject] = {
+        val builder = MongoDBObject.newBuilder
+        builder += "proposalId" -> proposalId
+        builder += "phase" -> (phase - 4)
+        collPreset.find(builder.result).toList
+    }
+
     def currentPeriodPreset(proposalId: String, phase: Int = 0): List[DBObject] = {
         val builder = MongoDBObject.newBuilder
         builder += "proposalId" -> proposalId
@@ -150,11 +157,15 @@ package object NTMIOAggregation {
             val h = hosps.find(_.get("_id") == x.get("target")).get
             builder += "hospital" -> h.get("name")
             builder += "hospital_level" -> h.get("level")
+            builder += "city" -> h.get("position")
 
             builder += "goods_id" -> x.get("product").toString
             val p = products.find(_.get("_id") == x.get("product")).get
             builder += "product" -> p.get("name")
             builder += "life_cycle" -> p.get("lifeCycle")
+            builder += "product_area" -> p.get("treatmentArea")
+            if (p.get("name") == "开拓来") builder += "status" -> "已开发"
+            else builder += "status" -> "未开发"
 
             builder += "quota" -> x.get("salesTarget")
             builder += "budget" -> x.get("budget")
@@ -264,14 +275,35 @@ package object NTMIOAggregation {
 
                 case Some(ps) => {
                     builder += "patient" -> ps.get("patientNum")
+//                    builder += "p_ytd_sales" -> ps.get("ytd")
+                    builder += "p_ytd_sales" -> "0"
+//                    builder += "pppp_sales" -> ps.get("lySalse")
+//                    builder += "p_budget" -> ps.get("salesQuota")
+                    builder += "p_budget" -> "0"
                 }
                 case None => {
                     builder += "patient" -> "0"
+                    builder += "p_ytd_sales" -> "0"
+//                    builder += "pppp_sales" -> "0"
+                    builder += "p_budget" -> "0"
                 }
             }
 
-            builder += "hosp_num" -> 30
-            builder += "rep_num" -> 6
+            currentPeriodPreset(proposalId, -4).
+                find(x => x.get("hospital") == h.get("_id") && x.get("product") == p.get("_id")) match {
+
+                case Some(ps) => {
+                    builder += "pppp_sales" -> ps.get("sales")
+                }
+                case None => {
+                    builder += "pppp_sales" -> "0"
+                }
+            }
+
+            builder += "hosp_num" -> hosps.length
+            builder += "rep_num" -> resources.length
+            builder += "initial_budget" -> 250000.0
+
 
             collCal.insert(builder.result())
         }
@@ -377,6 +409,61 @@ package object NTMIOAggregation {
 
         builder.result()
     }
+    
+    def calReport2Report(hosps: List[DBObject],
+                         products: List[DBObject],
+                         resources: List[DBObject],
+                         calReport: List[DBObject]): List[DBObject] = {
+        
+        
+        val results = calReport.map(calrep => {
+            val resource_id = resources.find(h => h.getAs[String]("name") == calrep.getAs[String]("resource")) match {
+                case Some(o) => o.getAs[ObjectId]("_id").toString
+                case None => None
+            }
+            
+            val hospital_id = hosps.find(h => h.getAs[String]("name") == calrep.getAs[String]("hospital")) match {
+                case Some(o) => o.getAs[ObjectId]("_id").get.toString
+                case None => None
+            }
+            
+            val product_id = products.find(h => h.getAs[String]("name") == calrep.getAs[String]("product")) match {
+                case Some(o) => o.getAs[ObjectId]("_id").get.toString
+                case None => None
+            }
+            
+            val builder = MongoDBObject.newBuilder
+            builder += "__v" -> 0
+            builder += "achievements" -> None
+            builder += "behaviorEfficiency" -> None
+            builder += "category" -> "Hospital"
+            builder += "drugEntrance" -> None
+            builder += "hospital" -> hospital_id
+            builder += "patientNum" -> None
+            builder += "periodId" -> calrep.getAs[String]("period_id")
+            builder += "phase" -> None
+            builder += "potential" -> calrep.getAs[Double]("potential")
+            builder += "product" -> product_id
+            builder += "productKnowledge" -> calrep.getAs[Double]("product_knowledge")
+            builder += "projectId" -> calrep.getAs[String]("project_id")
+            builder += "proposalId" -> None
+            builder += "quotaContri" -> None
+            builder += "quotaGrowthMOM" -> None
+            builder += "region" -> None
+            builder += "resource" -> resource_id
+            builder += "sales" -> calrep.getAs[Double]("sales")
+            builder += "salesContri" -> None
+            builder += "salesGrowthMOM" -> None
+            builder += "salesGrowthYOY" -> None
+            builder += "salesQuota" -> calrep.getAs[Double]("quota")
+            builder += "salesSkills" -> calrep.getAs[Double]("sales_skills")
+            builder += "share" -> calrep.getAs[Double]("share")
+            builder += "territoryManagementAbility" -> calrep.getAs[Double]("territory_management_ability")
+            builder += "workMotivation" -> calrep.getAs[Double]("work_motivation")
+            builder.result()
+        })
+        results
+    }
 
     /**
       * TmReportAgg
@@ -392,6 +479,25 @@ package object NTMIOAggregation {
             builder += "job_id" -> jobId
             bulk.insert(periodPresetReport(hosps, products, resources, jobId, x))
         }
+        bulk.execute()
+        jobId
+    }
+    
+    /**
+      * collection => cal_report to reports
+      */
+    def TmResultAgg(proposalId: String, projectId: String, periodId: String): String = {
+        val jobId = UUID.randomUUID().toString
+        val (hosps, products, resources) = infoWithProposal(proposalId)
+        
+        val bulk = collReports.initializeOrderedBulkOperation
+        val builder = MongoDBObject.newBuilder
+        
+        builder += "period_id" ->  periodId
+        builder += "project_id" -> projectId
+        val calReports = collCalReport.find(builder.result).toList
+        
+        calReport2Report(hosps, products, resources, calReports).foreach(bulk.insert(_))
         bulk.execute()
         jobId
     }
