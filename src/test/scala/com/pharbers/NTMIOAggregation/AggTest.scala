@@ -6,9 +6,9 @@ class AggTest extends FunSuite {
 
     test("test for tm agg") {
         println("start")
-        println(TmInputAgg("5d563e6345c8d71248eaa939",
-            "5d563e76a659e6103b435536",
-            "5d563e76a659e6103b435537"))
+        println(TmInputAgg("5d565f644c4b7a1b1d7fa7ff",
+            "5d5661078a35ce1a2609b228",
+            "5d5661078a35ce1a2609b229"))
     }
 
     test("test for tm report") {
