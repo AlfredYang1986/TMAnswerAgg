@@ -243,12 +243,14 @@ package object NTMIOAggregation {
                     builder += "p_quota" -> ps.get("salesQuota")
                     builder += "p_share" -> ps.get("share")
                     builder += "potential" -> ps.get("potential")
+                    builder += "patient" -> ps.get("patientNum")
                 }
                 case None => {
                     builder += "p_sales" -> "0"
                     builder += "p_quota" -> "0"
                     builder += "p_share" -> "0.0"
                     builder += "potential" -> "0.0"
+                    builder += "patient" -> "0"
                 }
             }
 
@@ -289,9 +291,9 @@ package object NTMIOAggregation {
 
         builder += "job_id" -> jobId
         builder += "category" -> report.get("category")
-        builder += "share" -> report.get("share")
+        builder += "share" -> report.getOrElse("share", 0.0)
         builder += "sales" -> report.get("sales")
-        builder += "quota" -> report.get("quota")
+        builder += "quota" -> report.getOrElse("quota", 0.0)
         builder += "budget" -> 0.0
         builder += "potential" -> report.get("potential")
 
@@ -322,11 +324,11 @@ package object NTMIOAggregation {
                 builder += "representative" -> r.get("name")
                 builder += "representative_time" -> 0
 
-                builder += "work_motivation" -> report.get("workMotivation")
-                builder += "territory_management_ability" -> report.get("territoryManagementAbility")
-                builder += "sales_skills" -> report.get("salesSkills")
-                builder += "product_knowledge" -> report.get("productKnowledge")
-                builder += "behavior_efficiency" -> report.get("behaviorEfficiency")
+                builder += "work_motivation" -> report.getOrElse("workMotivation", 0.0)
+                builder += "territory_management_ability" -> report.getOrElse("territoryManagementAbility", 0.0)
+                builder += "sales_skills" -> report.getOrElse("salesSkills", 0.0)
+                builder += "product_knowledge" -> report.getOrElse("productKnowledge", 0.0)
+                builder += "behavior_efficiency" -> report.getOrElse("behaviorEfficiency", 0.0)
             }
             case None => {
                 builder += "representative" -> ""
