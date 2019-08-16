@@ -7,7 +7,8 @@ import com.mongodb.casbah.Imports._
 import scala.collection.immutable
 
 package object NTMIOAggregation {
-    val mongodbHost = "192.168.100.176"
+//    val mongodbHost = "192.168.100.176"
+    val mongodbHost = "127.0.0.1"
     val mongodbPort = 27017
     val mongodbUsername = ""
     val mongodbPassword = ""
@@ -260,13 +261,11 @@ package object NTMIOAggregation {
                     builder += "p_sales" -> ps.get("sales")
                     builder += "p_quota" -> ps.get("salesQuota")
                     builder += "p_share" -> ps.get("share")
-                    builder += "potential" -> ps.get("potential")
                 }
                 case None => {
                     builder += "p_sales" -> "0"
                     builder += "p_quota" -> "0"
                     builder += "p_share" -> "0.0"
-                    builder += "potential" -> "0.0"
                 }
             }
 
@@ -280,12 +279,14 @@ package object NTMIOAggregation {
 //                    builder += "pppp_sales" -> ps.get("lySalse")
 //                    builder += "p_budget" -> ps.get("salesQuota")
                     builder += "p_budget" -> "0"
+                    builder += "potential" -> ps.get("potential")
                 }
                 case None => {
                     builder += "patient" -> "0"
                     builder += "p_ytd_sales" -> "0"
 //                    builder += "pppp_sales" -> "0"
                     builder += "p_budget" -> "0"
+                    builder += "potential" -> "0.0"
                 }
             }
 
@@ -322,7 +323,7 @@ package object NTMIOAggregation {
 
                 builder += "life_cycle" -> x.get("lifeCycle")
                 builder += "product" -> x.get("name")
-                builder += "product_area" -> x.get("product_area")
+                builder += "product_area" -> x.get("treatmentArea")
 
                 collProposal.findOne(DBObject("_id"->new ObjectId(proposalId))) match {
                     case Some(p) => {
@@ -424,7 +425,7 @@ package object NTMIOAggregation {
                          calReport: List[DBObject]): List[DBObject] = {
         
         
-        val results = calReport.map(calrep => {
+        calReport.map(calrep => {
             val resource_id = resources.find(h => h.getAs[String]("name") == calrep.getAs[String]("resource")) match {
                 case Some(o) => o.getAs[ObjectId]("_id").toString
                 case None => None
@@ -442,35 +443,34 @@ package object NTMIOAggregation {
             
             val builder = MongoDBObject.newBuilder
             builder += "__v" -> 0
-            builder += "achievements" -> None
-            builder += "behaviorEfficiency" -> None
+            builder += "achievements" -> calrep.getAsOrElse[Double]("achievements", 0.0)
+            builder += "behaviorEfficiency" -> calrep.getAsOrElse[Double]("behaviorEfficiency", 0.0)
             builder += "category" -> "Hospital"
-            builder += "drugEntrance" -> None
+            builder += "drugEntrance" -> calrep.getAsOrElse[String]("drugEntrance", "")
             builder += "hospital" -> hospital_id
-            builder += "patientNum" -> None
-            builder += "periodId" -> calrep.getAs[String]("period_id")
-            builder += "phase" -> None
-            builder += "potential" -> calrep.getAs[Double]("potential")
+            builder += "patientNum" -> calrep.getAsOrElse[Double]("patient", 0.0)
+            builder += "periodId" -> calrep.getAsOrElse[String]("period_id", "")
+            builder += "phase" -> calrep.getAsOrElse[Double]("phase", 0.0)
+            builder += "potential" -> calrep.getAsOrElse[Double]("potential", 0.0)
             builder += "product" -> product_id
-            builder += "productKnowledge" -> calrep.getAs[Double]("product_knowledge")
-            builder += "projectId" -> calrep.getAs[String]("project_id")
+            builder += "productKnowledge" -> calrep.getAsOrElse[Double]("product_knowledge", 0.0)
+            builder += "projectId" -> calrep.getAsOrElse[String]("project_id", "")
             builder += "proposalId" -> None
-            builder += "quotaContri" -> None
-            builder += "quotaGrowthMOM" -> None
-            builder += "region" -> None
+            builder += "quotaContri" -> calrep.getAsOrElse[Double]("quotaContri", 0.0)
+            builder += "quotaGrowthMOM" -> calrep.getAsOrElse[Double]("quotaGrowthMOM", 0.0)
+            builder += "region" -> calrep.getAsOrElse[String]("region", "")
             builder += "resource" -> resource_id
-            builder += "sales" -> calrep.getAs[Double]("sales")
-            builder += "salesContri" -> None
-            builder += "salesGrowthMOM" -> None
-            builder += "salesGrowthYOY" -> None
-            builder += "salesQuota" -> calrep.getAs[Double]("quota")
-            builder += "salesSkills" -> calrep.getAs[Double]("sales_skills")
-            builder += "share" -> calrep.getAs[Double]("share")
-            builder += "territoryManagementAbility" -> calrep.getAs[Double]("territory_management_ability")
-            builder += "workMotivation" -> calrep.getAs[Double]("work_motivation")
+            builder += "sales" -> calrep.getAsOrElse[Double]("sales", 0.0)
+            builder += "salesContri" -> calrep.getAsOrElse[Double]("salesContri", 0.0)
+            builder += "salesGrowthMOM" -> calrep.getAsOrElse[Double]("salesGrowthMOM", 0.0)
+            builder += "salesGrowthYOY" -> calrep.getAsOrElse[Double]("salesGrowthYOY", 0.0)
+            builder += "salesQuota" -> calrep.getAsOrElse[Double]("quota", 0.0)
+            builder += "salesSkills" -> calrep.getAsOrElse[Double]("sales_skills", 0.0)
+            builder += "share" -> calrep.getAsOrElse[Double]("share", 0.0)
+            builder += "territoryManagementAbility" -> calrep.getAsOrElse[Double]("territory_management_ability", 0.0)
+            builder += "workMotivation" -> calrep.getAsOrElse[Double]("work_motivation", 0.0)
             builder.result()
         })
-        results
     }
 
     /**
