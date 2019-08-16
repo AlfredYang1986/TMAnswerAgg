@@ -17,6 +17,13 @@ class AggTest extends FunSuite {
             "",
             ""))
     }
+	
+	test("test for tm cal_report 2 report") {
+		println("start")
+		println(TmResultAgg("5d5515ae6573f7239ad3cb0f",
+			"5d5515eb12563c156b04f8d5",
+			"5d5515eb12563c156b04f8d6"))
+	}
 
 //    test("test for tm result agg") {
 //        println("start")
