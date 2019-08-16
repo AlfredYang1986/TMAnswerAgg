@@ -322,6 +322,7 @@ package object NTMIOAggregation {
 
                 builder += "life_cycle" -> x.get("lifeCycle")
                 builder += "product" -> x.get("name")
+                builder += "product_area" -> x.get("product_area")
 
                 collProposal.findOne(DBObject("_id"->new ObjectId(proposalId))) match {
                     case Some(p) => {
