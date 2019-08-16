@@ -11,7 +11,7 @@ package object NTMIOAggregation {
     val mongodbPort = 27017
     val mongodbUsername = ""
     val mongodbPassword = ""
-    val ntmDBName = "pharbers-ntm-client-5"
+    val ntmDBName = "pharbers-ntm-client"
     val answerCollName = "answers"
     val presetCollName = "presets"
     val periodCollName = "periods"
@@ -109,6 +109,13 @@ package object NTMIOAggregation {
         lp ::: pp
     }
 
+    def lastYearPreset(proposalId: String, phase: Int = 0): List[DBObject] = {
+        val builder = MongoDBObject.newBuilder
+        builder += "proposalId" -> proposalId
+        builder += "phase" -> (phase - 4)
+        collPreset.find(builder.result).toList
+    }
+
     def currentPeriodPreset(proposalId: String, phase: Int = 0): List[DBObject] = {
         val builder = MongoDBObject.newBuilder
         builder += "proposalId" -> proposalId
@@ -150,11 +157,15 @@ package object NTMIOAggregation {
             val h = hosps.find(_.get("_id") == x.get("target")).get
             builder += "hospital" -> h.get("name")
             builder += "hospital_level" -> h.get("level")
+            builder += "city" -> h.get("position")
 
             builder += "goods_id" -> x.get("product").toString
             val p = products.find(_.get("_id") == x.get("product")).get
             builder += "product" -> p.get("name")
             builder += "life_cycle" -> p.get("lifeCycle")
+            builder += "product_area" -> p.get("treatmentArea")
+            if (p.get("name") == "开拓来") builder += "status" -> "已开发"
+            else builder += "status" -> "未开发"
 
             builder += "quota" -> x.get("salesTarget")
             builder += "budget" -> x.get("budget")
@@ -264,14 +275,35 @@ package object NTMIOAggregation {
 
                 case Some(ps) => {
                     builder += "patient" -> ps.get("patientNum")
+//                    builder += "p_ytd_sales" -> ps.get("ytd")
+                    builder += "p_ytd_sales" -> "0"
+//                    builder += "pppp_sales" -> ps.get("lySalse")
+//                    builder += "p_budget" -> ps.get("salesQuota")
+                    builder += "p_budget" -> "0"
                 }
                 case None => {
                     builder += "patient" -> "0"
+                    builder += "p_ytd_sales" -> "0"
+//                    builder += "pppp_sales" -> "0"
+                    builder += "p_budget" -> "0"
                 }
             }
 
-            builder += "hosp_num" -> 30
-            builder += "rep_num" -> 6
+            currentPeriodPreset(proposalId, -4).
+                find(x => x.get("hospital") == h.get("_id") && x.get("product") == p.get("_id")) match {
+
+                case Some(ps) => {
+                    builder += "pppp_sales" -> ps.get("sales")
+                }
+                case None => {
+                    builder += "pppp_sales" -> "0"
+                }
+            }
+
+            builder += "hosp_num" -> hosps.length
+            builder += "rep_num" -> resources.length
+            builder += "initial_budget" -> 250000.0
+
 
             collCal.insert(builder.result())
         }
