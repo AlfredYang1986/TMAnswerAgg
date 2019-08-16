@@ -11,7 +11,7 @@ package object NTMIOAggregation {
     val mongodbPort = 27017
     val mongodbUsername = ""
     val mongodbPassword = ""
-    val ntmDBName = "pharbers-ntm-client"
+    val ntmDBName = "pharbers-ntm-client-5"
     val answerCollName = "answers"
     val presetCollName = "presets"
     val periodCollName = "periods"
@@ -107,6 +107,13 @@ package object NTMIOAggregation {
             collPreset.find(builder.result).toList
         }
         lp ::: pp
+    }
+
+    def currentPeriodPreset(proposalId: String, phase: Int = 0): List[DBObject] = {
+        val builder = MongoDBObject.newBuilder
+        builder += "proposalId" -> proposalId
+        builder += "phase" -> phase
+        collPreset.find(builder.result).toList
     }
 
     def presetWithIds(ids: List[ObjectId]) : List[DBObject] =
@@ -243,16 +250,28 @@ package object NTMIOAggregation {
                     builder += "p_quota" -> ps.get("salesQuota")
                     builder += "p_share" -> ps.get("share")
                     builder += "potential" -> ps.get("potential")
-                    builder += "patient" -> ps.get("patientNum")
                 }
                 case None => {
                     builder += "p_sales" -> "0"
                     builder += "p_quota" -> "0"
                     builder += "p_share" -> "0.0"
                     builder += "potential" -> "0.0"
+                }
+            }
+
+            currentPeriodPreset(proposalId, 0).
+                find(x => x.get("hospital") == h.get("_id") && x.get("product") == p.get("_id")) match {
+
+                case Some(ps) => {
+                    builder += "patient" -> ps.get("patientNum")
+                }
+                case None => {
                     builder += "patient" -> "0"
                 }
             }
+
+            builder += "hosp_num" -> 30
+            builder += "rep_num" -> 6
 
             collCal.insert(builder.result())
         }
@@ -291,11 +310,31 @@ package object NTMIOAggregation {
 
         builder += "job_id" -> jobId
         builder += "category" -> report.get("category")
-        builder += "share" -> report.getAs[Double]("share").getOrElse(0.0)
-        builder += "sales" -> report.getAs[Double]("sales").getOrElse(0.0)
-        builder += "quota" -> report.getAs[Double]("quota").getOrElse(0.0)
+//        builder += "share" -> report.getAs[Double]("share").getOrElse(0.0)
+        builder += "share" ->
+        report.get("share") match {
+            case null => 0.0
+            case x: AnyRef => x.toString.toDouble
+        }
+//        builder += "sales" -> report.getAs[Double]("sales").getOrElse(0.0)
+        builder += "sales" ->
+        report.get("sales") match {
+            case null => 0.0
+            case x: AnyRef => x.toString.toDouble
+        }
+//        builder += "quota" -> report.getAs[Double]("quota").getOrElse(0.0)
+        builder += "quota" ->
+        report.get("quota") match {
+            case null => 0.0
+            case x: AnyRef => x.toString.toDouble
+        }
         builder += "budget" -> 0.0
-        builder += "potential" -> report.get("potential")
+//        builder += "potential" -> report.get("potential")
+        builder += "potential" -> //report.get("potential")
+        report.get("potential") match {
+            case null => 0.0
+            case x: AnyRef => x.toString.toDouble
+        }
 
         hosps.find(_.get("_id") == report.get("hospital")) match {
             case Some(h) => {
@@ -324,11 +363,36 @@ package object NTMIOAggregation {
                 builder += "representative" -> r.get("name")
                 builder += "representative_time" -> 0
 
-                builder += "work_motivation" -> report.getAs[Double]("workMotivation").getOrElse(0.0)
-                builder += "territory_management_ability" -> report.getAs[Double]("territoryManagementAbility").getOrElse(0.0)
-                builder += "sales_skills" -> report.getAs[Double]("salesSkills").getOrElse(0.0)
-                builder += "product_knowledge" -> report.getAs[Double]("productKnowledge").getOrElse(0.0)
-                builder += "behavior_efficiency" -> report.getAs[Double]("behaviorEfficiency").getOrElse(0.0)
+//                builder += "work_motivation" -> report.getAs[Double]("workMotivation").getOrElse(0.0)
+                builder += "work_motivation" ->
+                report.get("workMotivation") match {
+                    case null => 0.0
+                    case x: AnyRef => x.toString.toDouble
+                }
+//                builder += "territory_management_ability" -> report.getAs[Double]("territoryManagementAbility").getOrElse(0.0)
+                builder += "territory_management_ability" ->
+                report.get("territoryManagementAbility") match {
+                    case null => 0.0
+                    case x: AnyRef => x.toString.toDouble
+                }
+//                builder += "sales_skills" -> report.getAs[Double]("salesSkills").getOrElse(0.0)
+                builder += "sales_skills" ->
+                report.get("salesSkills") match {
+                    case null => 0.0
+                    case x: AnyRef => x.toString.toDouble
+                }
+//                builder += "product_knowledge" -> report.getAs[Double]("productKnowledge").getOrElse(0.0)
+                builder += "product_knowledge" ->
+                report.get("productKnowledge") match {
+                    case null => 0.0
+                    case x: AnyRef => x.toString.toDouble
+                }
+//                builder += "behavior_efficiency" -> report.getAs[Double]("behaviorEfficiency").getOrElse(0.0)
+                builder += "behavior_efficiency" ->
+                report.get("behaviorEfficiency") match {
+                    case null => 0.0
+                    case x: AnyRef => x.toString.toDouble
+                }
             }
             case None => {
                 builder += "representative" -> ""
@@ -341,6 +405,7 @@ package object NTMIOAggregation {
                 builder += "behavior_efficiency" -> 0.0
             }
         }
+
 
         builder.result()
     }
