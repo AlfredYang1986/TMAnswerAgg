@@ -377,6 +377,61 @@ package object NTMIOAggregation {
 
         builder.result()
     }
+    
+    def calReport2Report(hosps: List[DBObject],
+                         products: List[DBObject],
+                         resources: List[DBObject],
+                         calReport: List[DBObject]): List[DBObject] = {
+        
+        
+        val results = calReport.map(calrep => {
+            val resource_id = resources.find(h => h.getAs[String]("name") == calrep.getAs[String]("resource")) match {
+                case Some(o) => o.getAs[ObjectId]("_id").toString
+                case None => None
+            }
+            
+            val hospital_id = hosps.find(h => h.getAs[String]("name") == calrep.getAs[String]("hospital")) match {
+                case Some(o) => o.getAs[ObjectId]("_id").get.toString
+                case None => None
+            }
+            
+            val product_id = products.find(h => h.getAs[String]("name") == calrep.getAs[String]("product")) match {
+                case Some(o) => o.getAs[ObjectId]("_id").get.toString
+                case None => None
+            }
+            
+            val builder = MongoDBObject.newBuilder
+            builder += "__v" -> 0
+            builder += "achievements" -> None
+            builder += "behaviorEfficiency" -> None
+            builder += "category" -> "Hospital"
+            builder += "drugEntrance" -> None
+            builder += "hospital" -> hospital_id
+            builder += "patientNum" -> None
+            builder += "periodId" -> calrep.getAs[String]("period_id")
+            builder += "phase" -> None
+            builder += "potential" -> calrep.getAs[Double]("potential")
+            builder += "product" -> product_id
+            builder += "productKnowledge" -> calrep.getAs[Double]("product_knowledge")
+            builder += "projectId" -> calrep.getAs[String]("project_id")
+            builder += "proposalId" -> None
+            builder += "quotaContri" -> None
+            builder += "quotaGrowthMOM" -> None
+            builder += "region" -> None
+            builder += "resource" -> resource_id
+            builder += "sales" -> calrep.getAs[Double]("sales")
+            builder += "salesContri" -> None
+            builder += "salesGrowthMOM" -> None
+            builder += "salesGrowthYOY" -> None
+            builder += "salesQuota" -> calrep.getAs[Double]("quota")
+            builder += "salesSkills" -> calrep.getAs[Double]("sales_skills")
+            builder += "share" -> calrep.getAs[Double]("share")
+            builder += "territoryManagementAbility" -> calrep.getAs[Double]("territory_management_ability")
+            builder += "workMotivation" -> calrep.getAs[Double]("work_motivation")
+            builder.result()
+        })
+        results
+    }
 
     /**
       * TmReportAgg
@@ -392,6 +447,25 @@ package object NTMIOAggregation {
             builder += "job_id" -> jobId
             bulk.insert(periodPresetReport(hosps, products, resources, jobId, x))
         }
+        bulk.execute()
+        jobId
+    }
+    
+    /**
+      * collection => cal_report to reports
+      */
+    def TmResultAgg(proposalId: String, projectId: String, periodId: String): String = {
+        val jobId = UUID.randomUUID().toString
+        val (hosps, products, resources) = infoWithProposal(proposalId)
+        
+        val bulk = collReports.initializeOrderedBulkOperation
+        val builder = MongoDBObject.newBuilder
+        
+        builder += "period_id" ->  periodId
+        builder += "project_id" -> projectId
+        val calReports = collCalReport.find(builder.result).toList
+        
+        calReport2Report(hosps, products, resources, calReports).foreach(bulk.insert(_))
         bulk.execute()
         jobId
     }
