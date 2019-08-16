@@ -13,7 +13,7 @@ class AggTest extends FunSuite {
 
     test("test for tm report") {
         println("start")
-        println(TmReportAgg("5d5555af2b6f2830b93bfd92",
+        println(TmReportAgg("5d5606e7c388c003ed91967a",
             "",
             ""))
     }
