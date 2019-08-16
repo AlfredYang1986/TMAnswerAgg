@@ -7,8 +7,7 @@ import com.mongodb.casbah.Imports._
 import scala.collection.immutable
 
 package object NTMIOAggregation {
-//    val mongodbHost = "192.168.100.176"
-    val mongodbHost = "127.0.0.1"
+    val mongodbHost = "192.168.100.176"
     val mongodbPort = 27017
     val mongodbUsername = ""
     val mongodbPassword = ""
@@ -424,6 +423,11 @@ package object NTMIOAggregation {
                          resources: List[DBObject],
                          calReport: List[DBObject]): List[DBObject] = {
         
+        def queryProportion(molecule: Double, denominator: Double): Double = {
+            if (denominator == 0.0 || molecule == 0.0) { 0.0 }
+            else molecule / denominator
+        }
+        
         
         calReport.map(calrep => {
             val resource_id = resources.find(h => h.getAs[String]("name") == calrep.getAs[String]("resource")) match {
@@ -441,29 +445,45 @@ package object NTMIOAggregation {
                 case None => None
             }
             
+            
+            val achievements = queryProportion(calrep.getAsOrElse[Double]("sales", 0.0),
+                                                calrep.getAsOrElse[Double]("quota", 0.0))
+            
+            // 带查询预设值
+            val quotaContri = queryProportion(calrep.getAsOrElse[Double]("quota", 0.0), 0)
+            
+            val salesContri = queryProportion(calrep.getAsOrElse[Double]("sales", 0.0),
+                                                calrep.getAsOrElse[Double]("sums", 0.0))
+            
+            val salesGrowthMOM = queryProportion(calrep.getAsOrElse[Double]("sales", 0.0),
+                                                calrep.getAsOrElse[Double]("p_sales", 0.0)) - 1
+            
+            val salesGrowthYOY = queryProportion(calrep.getAsOrElse[Double]("sales", 0.0),
+                                                    calrep.getAsOrElse[Double]("pppp_sales", 0.0)) - 1
+    
             val builder = MongoDBObject.newBuilder
             builder += "__v" -> 0
-            builder += "achievements" -> calrep.getAsOrElse[Double]("achievements", 0.0)
-            builder += "behaviorEfficiency" -> calrep.getAsOrElse[Double]("behaviorEfficiency", 0.0)
-            builder += "category" -> "Hospital"
-            builder += "drugEntrance" -> calrep.getAsOrElse[String]("drugEntrance", "")
+            builder += "achievements" -> achievements // sales / quota
+            builder += "behaviorEfficiency" -> calrep.getAsOrElse[Double]("behavior_efficiency", 0.0)
+            builder += "category" -> None // "Hospital"
+            builder += "drugEntrance" -> calrep.getAsOrElse[String]("status", "")
             builder += "hospital" -> hospital_id
             builder += "patientNum" -> calrep.getAsOrElse[Double]("patient", 0.0)
             builder += "periodId" -> calrep.getAsOrElse[String]("period_id", "")
-            builder += "phase" -> calrep.getAsOrElse[Double]("phase", 0.0)
+            builder += "phase" -> None // calrep.getAsOrElse[Double]("phase", 0.0)
             builder += "potential" -> calrep.getAsOrElse[Double]("potential", 0.0)
             builder += "product" -> product_id
             builder += "productKnowledge" -> calrep.getAsOrElse[Double]("product_knowledge", 0.0)
             builder += "projectId" -> calrep.getAsOrElse[String]("project_id", "")
             builder += "proposalId" -> None
-            builder += "quotaContri" -> calrep.getAsOrElse[Double]("quotaContri", 0.0)
-            builder += "quotaGrowthMOM" -> calrep.getAsOrElse[Double]("quotaGrowthMOM", 0.0)
+            builder += "quotaContri" -> quotaContri // quota / 预设quota
+            builder += "quotaGrowthMOM" -> calrep.getAsOrElse[Double]("quotaGrowthMOM", 0.0) // 等安琪
             builder += "region" -> calrep.getAsOrElse[String]("region", "")
             builder += "resource" -> resource_id
             builder += "sales" -> calrep.getAsOrElse[Double]("sales", 0.0)
-            builder += "salesContri" -> calrep.getAsOrElse[Double]("salesContri", 0.0)
-            builder += "salesGrowthMOM" -> calrep.getAsOrElse[Double]("salesGrowthMOM", 0.0)
-            builder += "salesGrowthYOY" -> calrep.getAsOrElse[Double]("salesGrowthYOY", 0.0)
+            builder += "salesContri" -> salesContri // sales / sums
+            builder += "salesGrowthMOM" -> salesGrowthMOM // sales / p_sales -1
+            builder += "salesGrowthYOY" -> salesGrowthYOY // sales / pppp_sales -1
             builder += "salesQuota" -> calrep.getAsOrElse[Double]("quota", 0.0)
             builder += "salesSkills" -> calrep.getAsOrElse[Double]("sales_skills", 0.0)
             builder += "share" -> calrep.getAsOrElse[Double]("share", 0.0)
