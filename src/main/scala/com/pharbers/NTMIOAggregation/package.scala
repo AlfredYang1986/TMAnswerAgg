@@ -300,6 +300,12 @@ package object NTMIOAggregation {
         jobId
     }
 
+    def queryNumSafe(x: AnyRef): Double = {
+        if (x == null) 0.0
+        else x.toString.toDouble
+    }
+
+
     def periodPresetReport(
                               hosps: List[DBObject],
                               products: List[DBObject],
@@ -310,30 +316,12 @@ package object NTMIOAggregation {
 
         builder += "job_id" -> jobId
         builder += "category" -> report.get("category")
-//        builder += "share" -> report.getAs[Double]("share").getOrElse(0.0)
-        builder += "share" ->
-        report.get("share") match {
-            case null => 0.0
-            case x: AnyRef => x.toString.toDouble
-        }
-//        builder += "sales" -> report.getAs[Double]("sales").getOrElse(0.0)
-        builder += "sales" ->
-        report.get("sales") match {
-            case null => 0.0
-            case x: AnyRef => x.toString.toDouble
-        }
-//        builder += "quota" -> report.getAs[Double]("quota").getOrElse(0.0)
-        builder += "quota" ->
-        report.get("quota") match {
-            case null => 0.0
-            case x: AnyRef => x.toString.toDouble
-        }
+        builder += "share" -> queryNumSafe(report.get("share"))
+
+        builder += "sales" -> queryNumSafe(report.get("sales"))
+        builder += "quota" -> queryNumSafe(report.get("quota"))
         builder += "budget" -> 0.0
-        builder += "potential" -> //report.get("potential")
-        report.get("potential") match {
-            case null => 0.0
-            case x: AnyRef => x.toString.toDouble
-        }
+        builder += "potential" -> queryNumSafe(report.get("potential"))
         builder += "phase" -> report.get("phase")
 
         hosps.find(_.get("_id") == report.get("hospital")) match {
@@ -364,35 +352,15 @@ package object NTMIOAggregation {
                 builder += "representative_time" -> 0.0
 
 //                builder += "work_motivation" -> report.getAs[Double]("workMotivation").getOrElse(0.0)
-                builder += "work_motivation" ->
-                report.get("workMotivation") match {
-                    case null => 0.0
-                    case x: AnyRef => x.toString.toDouble
-                }
+                builder += "work_motivation" -> queryNumSafe(report.get("workMotivation"))
 //                builder += "territory_management_ability" -> report.getAs[Double]("territoryManagementAbility").getOrElse(0.0)
-                builder += "territory_management_ability" ->
-                report.get("territoryManagementAbility") match {
-                    case null => 0.0
-                    case x: AnyRef => x.toString.toDouble
-                }
+                builder += "territory_management_ability" -> queryNumSafe(report.get("territoryManagementAbility"))
 //                builder += "sales_skills" -> report.getAs[Double]("salesSkills").getOrElse(0.0)
-                builder += "sales_skills" ->
-                report.get("salesSkills") match {
-                    case null => 0.0
-                    case x: AnyRef => x.toString.toDouble
-                }
+                builder += "sales_skills" -> queryNumSafe(report.get("salesSkills"))
 //                builder += "product_knowledge" -> report.getAs[Double]("productKnowledge").getOrElse(0.0)
-                builder += "product_knowledge" ->
-                report.get("productKnowledge") match {
-                    case null => 0.0
-                    case x: AnyRef => x.toString.toDouble
-                }
+                builder += "product_knowledge" -> queryNumSafe(report.get("productKnowledge"))
 //                builder += "behavior_efficiency" -> report.getAs[Double]("behaviorEfficiency").getOrElse(0.0)
-                builder += "behavior_efficiency" ->
-                report.get("behaviorEfficiency") match {
-                    case null => 0.0
-                    case x: AnyRef => x.toString.toDouble
-                }
+                builder += "behavior_efficiency" -> queryNumSafe(report.get("behaviorEfficiency"))
             }
             case None => {
                 builder += "representative" -> ""
