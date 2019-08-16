@@ -329,12 +329,12 @@ package object NTMIOAggregation {
             case x: AnyRef => x.toString.toDouble
         }
         builder += "budget" -> 0.0
-//        builder += "potential" -> report.get("potential")
         builder += "potential" -> //report.get("potential")
         report.get("potential") match {
             case null => 0.0
             case x: AnyRef => x.toString.toDouble
         }
+        builder += "phase" -> report.get("phase")
 
         hosps.find(_.get("_id") == report.get("hospital")) match {
             case Some(h) => {
@@ -361,7 +361,7 @@ package object NTMIOAggregation {
         resources.find(_.get("_id") == report.get("resource")) match {
             case Some(r) => {
                 builder += "representative" -> r.get("name")
-                builder += "representative_time" -> 0
+                builder += "representative_time" -> 0.0
 
 //                builder += "work_motivation" -> report.getAs[Double]("workMotivation").getOrElse(0.0)
                 builder += "work_motivation" ->
