@@ -260,13 +260,11 @@ package object NTMIOAggregation {
                     builder += "p_sales" -> ps.get("sales")
                     builder += "p_quota" -> ps.get("salesQuota")
                     builder += "p_share" -> ps.get("share")
-                    builder += "potential" -> ps.get("potential")
                 }
                 case None => {
                     builder += "p_sales" -> "0"
                     builder += "p_quota" -> "0"
                     builder += "p_share" -> "0.0"
-                    builder += "potential" -> "0.0"
                 }
             }
 
@@ -280,12 +278,14 @@ package object NTMIOAggregation {
 //                    builder += "pppp_sales" -> ps.get("lySalse")
 //                    builder += "p_budget" -> ps.get("salesQuota")
                     builder += "p_budget" -> "0"
+                    builder += "potential" -> ps.get("potential")
                 }
                 case None => {
                     builder += "patient" -> "0"
                     builder += "p_ytd_sales" -> "0"
 //                    builder += "pppp_sales" -> "0"
                     builder += "p_budget" -> "0"
+                    builder += "potential" -> "0.0"
                 }
             }
 
@@ -322,7 +322,7 @@ package object NTMIOAggregation {
 
                 builder += "life_cycle" -> x.get("lifeCycle")
                 builder += "product" -> x.get("name")
-                builder += "product_area" -> x.get("product_area")
+                builder += "product_area" -> x.get("treatmentArea")
 
                 collProposal.findOne(DBObject("_id"->new ObjectId(proposalId))) match {
                     case Some(p) => {
