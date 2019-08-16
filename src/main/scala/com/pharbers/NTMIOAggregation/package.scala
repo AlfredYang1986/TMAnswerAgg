@@ -11,7 +11,7 @@ package object NTMIOAggregation {
     val mongodbPort = 27017
     val mongodbUsername = ""
     val mongodbPassword = ""
-    val ntmDBName = "pharbers-ntm-client-4"
+    val ntmDBName = "pharbers-ntm-client"
     val answerCollName = "answers"
     val presetCollName = "presets"
     val periodCollName = "periods"
@@ -129,7 +129,7 @@ package object NTMIOAggregation {
                                         projectId: String
                                     ) : String = {
         val ra = answers.filter(_.get("category") == "Resource")
-        val ma = answers.find(_.get("category") == "Management").get
+        val ma = answers.find(_.get("category") == "Management").getOrElse(MongoDBObject.newBuilder.result())
         val ba = answers.filter(_.get("category") == "Business")
         val jobId = UUID.randomUUID().toString
 
