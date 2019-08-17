@@ -10,10 +10,11 @@ package object TmAggCal2Report {
                  proposalId: String,
                  projectId: String,
                  periodId: String,
-                 phase: Int = 0): String = {
+                 phase: Int = 0): Unit = {
 
         val jobResult = calReportColl.find(DBObject("job_id" -> jobId)).toList
 
+        val curPeriod = periodsColl.findOne(DBObject("_id" -> new ObjectId(periodId))).getOrElse(null)
         val curProposal = proposalsColl.findOne(DBObject("_id" -> new ObjectId(proposalId))).getOrElse(null)
         val curProject = projectsColl.findOne(DBObject("_id" -> new ObjectId(projectId))).getOrElse(null)
 
@@ -29,30 +30,80 @@ package object TmAggCal2Report {
                     .map(x => DBObject("_id" -> x)))).toList
         )
 
+        aggHospital(jobResult, hosps, products, resources, curProject, curPeriod, phase)
     }
+
+    def queryNumSafe(x: AnyRef): Double = {
+        if (x == null) 0.0
+        else x.toString.toDouble
+    }
+
 
     def aggHospital(
                        results: List[DBObject],
                        hospitals: List[DBObject],
                        products: List[DBObject],
                        resources: List[DBObject],
+                       project: DBObject,
+                       period: DBObject,
                        phase: Int) = {
+
         val bulk = reportsColl.initializeOrderedBulkOperation
 
-        results.groupBy(res => res.get("hospital").toString + "##" + res.get("product").toString).foreach { it =>
+        results.groupBy( res =>
+            res.get("hospital").toString + "##" +
+                res.get("product").toString + "##" +
+                res.get("representative").toString
+        ).foreach { it =>
+
             val items = it._2
-            val (hn :: pn :: Nil) = it._1.split("##")
+            val (hn :: pn :: rn :: Nil) = it._1.split("##").toList
             val builder  = MongoDBObject.newBuilder
             builder += "phase" -> phase
             builder += "category" -> "Hospital"
             builder += "hospital" -> hospitals.find(_.get("name") == hn).get._id
             builder += "product" -> products.find(_.get("name") == pn).get._id
-//            builder += "resource" -> resources.find(_.get("name") == )
-            
+            builder += "resource" -> resources.find(_.get("name") == rn).get._id
+            builder += "region" -> items.head.get("region")
 
+            /**
+              * 1. report 内容
+              *  - sales
+              *  - salesContri
+              *  - salesQuota
+              *  - quotaGrowthMOM
+              *  - quotaContri
+              *  - share
+              *  - salesGrowthYOY
+              *  - salesGrowthMOM
+              *  - achievements
+              */
+            builder += "sales" -> items.map(x => queryNumSafe(x.get("sales"))).sum
+            builder += "salesContri" -> items.map(x => queryNumSafe(x.get("sales"))).sum
+            builder += "salesGrowthYOY" -> 0.0
+            builder += "salesGrowthMOM" -> 0.0
+            builder += "salesQuota" -> items.map(x => queryNumSafe(x.get("quota"))).sum
+            builder += "quotaGrowthMOM" -> 0.0
+            builder += "share" -> items.map(x => queryNumSafe(x.get("share"))).sum
+            builder += "achievements" -> items.map(x => queryNumSafe(x.get("achievements"))).sum
+
+
+            builder += "projectId" -> project._id.get.toString
+            builder += "periodId" -> period._id.get.toString
+
+            /**
+              * 2. preset 内容
+              *  - ytd
+              *  - sales
+              *  - share
+              *  - patientNum
+              *  - achievements
+              *  - budget
+              *  - initBudget
+              */
+
+            bulk.insert(builder.result)
         }
-
-
 
         bulk.execute()
     }
