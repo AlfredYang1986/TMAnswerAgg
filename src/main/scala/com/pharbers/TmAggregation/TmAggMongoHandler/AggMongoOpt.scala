@@ -4,11 +4,12 @@ import com.mongodb.casbah.Imports._
 import com.pharbers.TmAggregation.TmAggMongoHandler.AggCollEnum.AggCollEnum
 
 object AggMongoOpt {
-    val mongodbHost = "192.168.100.176"
+//    val mongodbHost = "192.168.100.176"
+    val mongodbHost = "127.0.0.1"
     val mongodbPort = 27017
     val mongodbUsername = ""
     val mongodbPassword = ""
-    val ntmDBName = "pharbers-ntm-client-10"
+    val ntmDBName = "pharbers-ntm-client10"
 
     lazy val db = MongoClient(mongodbHost, mongodbPort)(ntmDBName)
     var colls: Map[AggCollEnum, MongoCollection] = Map.empty
