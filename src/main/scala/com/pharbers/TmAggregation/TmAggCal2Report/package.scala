@@ -31,6 +31,7 @@ package object TmAggCal2Report {
         )
 
         aggHospital(jobResult, hosps, products, resources, curProject, curPeriod, phase)
+        aggRegion(jobResult, hosps, products, resources, curProject, curPeriod, phase)
     }
 
     def queryNumSafe(x: AnyRef): Double = {
@@ -43,33 +44,35 @@ package object TmAggCal2Report {
         else x.toString
     }
 
+    def queryName(x: DBObject): String =
+        x.get("hospital").toString + "##" +
+            x.get("product").toString + "##" +
+            x.get("representative").toString
 
-    def aggHospital(
+    def aggReport(
                        results: List[DBObject],
                        hospitals: List[DBObject],
                        products: List[DBObject],
                        resources: List[DBObject],
                        project: DBObject,
                        period: DBObject,
-                       phase: Int) = {
+                       phase: Int,
+                       cat: String,
+                       func: DBObject => String) = {
 
         val bulk = reportsColl.initializeOrderedBulkOperation
 
-        results.groupBy( res =>
-            res.get("hospital").toString + "##" +
-                res.get("product").toString + "##" +
-                res.get("representative").toString
-        ).foreach { it =>
+        results.groupBy(func(_)).foreach { it =>
 
             val items = it._2
-            val (hn :: pn :: rn :: Nil) = it._1.split("##").toList
+            val (hn :: pn :: rn :: Nil) = queryName(it._2.head).split("##").toList
             val builder  = MongoDBObject.newBuilder
             builder += "phase" -> phase
-            builder += "category" -> "Hospital"
+            builder += "category" -> cat //"Hospital"
             builder += "hospital" -> hospitals.find(_.get("name") == hn).get._id
             builder += "product" -> products.find(_.get("name") == pn).get._id
             builder += "resource" -> resources.find(_.get("name") == rn).get._id
-            builder += "region" -> queryStringSafe(items.head.get("region"))
+            builder += "region" -> queryStringSafe(items.head.get("city"))
 
             /**
               * 1. report 内容
@@ -111,5 +114,42 @@ package object TmAggCal2Report {
         }
 
         bulk.execute()
+    }
+
+    def aggHospital(
+                       results: List[DBObject],
+                       hospitals: List[DBObject],
+                       products: List[DBObject],
+                       resources: List[DBObject],
+                       project: DBObject,
+                       period: DBObject,
+                       phase: Int) = {
+
+        aggReport(
+            results, hospitals, products, resources,
+            project, period, phase, "Hospital",
+            (res) => {
+                res.get("hospital").toString + "##" +
+                    res.get("product").toString + "##" +
+                    res.get("representative").toString
+        })
+    }
+
+    def aggRegion(
+                       results: List[DBObject],
+                       hospitals: List[DBObject],
+                       products: List[DBObject],
+                       resources: List[DBObject],
+                       project: DBObject,
+                       period: DBObject,
+                       phase: Int) = {
+
+        aggReport(
+            results, hospitals, products, resources,
+            project, period, phase, "Region",
+            (res) => {
+                queryStringSafe(res.get("city")) + "##" +
+                    res.get("product").toString
+            })
     }
 }
