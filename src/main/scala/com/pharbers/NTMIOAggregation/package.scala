@@ -8,7 +8,7 @@ import scala.collection.immutable
 
 package object NTMIOAggregation {
 //    val mongodbHost = "192.168.100.176"
-    val mongodbHost = "127.0.0.1"
+    val mongodbHost = "192.168.100.176"
     val mongodbPort = 27017
     val mongodbUsername = ""
     val mongodbPassword = ""
