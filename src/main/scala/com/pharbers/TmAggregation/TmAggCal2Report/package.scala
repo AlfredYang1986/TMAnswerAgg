@@ -32,6 +32,7 @@ package object TmAggCal2Report {
 
         aggHospital(jobResult, hosps, products, resources, curProject, curPeriod, phase)
         aggRegion(jobResult, hosps, products, resources, curProject, curPeriod, phase)
+        aggResource(jobResult, hosps, products, resources, curProject, curPeriod, phase)
     }
 
     def queryNumSafe(x: AnyRef): Double = {
@@ -149,6 +150,24 @@ package object TmAggCal2Report {
             project, period, phase, "Region",
             (res) => {
                 queryStringSafe(res.get("city")) + "##" +
+                    res.get("product").toString
+            })
+    }
+
+    def aggResource(
+                       results: List[DBObject],
+                       hospitals: List[DBObject],
+                       products: List[DBObject],
+                       resources: List[DBObject],
+                       project: DBObject,
+                       period: DBObject,
+                       phase: Int) = {
+
+        aggReport(
+            results, hospitals, products, resources,
+            project, period, phase, "Resource",
+            (res) => {
+                res.get("representative").toString + "##" +
                     res.get("product").toString
             })
     }
