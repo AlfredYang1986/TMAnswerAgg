@@ -89,7 +89,7 @@ package object TmAggCal2Report {
               *  - achievements
               */
             builder += "sales" -> items.map(x => queryNumSafe(x.get("sales"))).sum
-            builder += "salesContri" -> items.map(x => queryNumSafe(x.get("sales"))).sum
+            builder += "salesContri" -> 0.0
             builder += "salesGrowthYOY" -> 0.0
             builder += "salesGrowthMOM" -> 0.0
             builder += "salesQuota" -> items.map(x => queryNumSafe(x.get("quota"))).sum
