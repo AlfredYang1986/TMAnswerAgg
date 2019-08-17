@@ -7,11 +7,12 @@ import com.mongodb.casbah.Imports._
 import scala.collection.immutable
 
 package object NTMIOAggregation {
-    val mongodbHost = "192.168.100.176"
+//    val mongodbHost = "192.168.100.176"
+    val mongodbHost = "127.0.0.1"
     val mongodbPort = 27017
     val mongodbUsername = ""
     val mongodbPassword = ""
-    val ntmDBName = "pharbers-ntm-client"
+    val ntmDBName = "pharbers-ntm-cli"
     val answerCollName = "answers"
     val presetCollName = "presets"
     val periodCollName = "periods"
@@ -421,76 +422,200 @@ package object NTMIOAggregation {
     def calReport2Report(hosps: List[DBObject],
                          products: List[DBObject],
                          resources: List[DBObject],
-                         calReport: List[DBObject]): List[DBObject] = {
+                         calReport: List[DBObject],
+                         phase: Int,
+                         periodId: String, projectId: String): (List[DBObject], List[DBObject], List[DBObject]) = {
         
         def queryProportion(molecule: Double, denominator: Double): Double = {
             if (denominator == 0.0 || molecule == 0.0) { 0.0 }
             else molecule / denominator
         }
         
+        def queryHospitalId(name: String): String =
+            hosps.find(_.getAs[String]("name").get == name) match {
+                case Some(o) => o.getAs[ObjectId]("_id").get.toString
+                case None => ""
+            }
         
-        calReport.map(calrep => {
-            val resource_id = resources.find(h => h.getAs[String]("name") == calrep.getAs[String]("resource")) match {
-                case Some(o) => o.getAs[ObjectId]("_id").toString
-                case None => None
-            }
-            
-            val hospital_id = hosps.find(h => h.getAs[String]("name") == calrep.getAs[String]("hospital")) match {
+        def queryProductId(name: String): String =
+            products.find(_.getAs[String]("name").get == name) match {
                 case Some(o) => o.getAs[ObjectId]("_id").get.toString
-                case None => None
+                case None => ""
             }
-            
-            val product_id = products.find(h => h.getAs[String]("name") == calrep.getAs[String]("product")) match {
+        
+        def queryResourceId(name: String): String =
+            resources.find(_.getAs[String]("name").get == name) match {
                 case Some(o) => o.getAs[ObjectId]("_id").get.toString
-                case None => None
+                case None => ""
             }
+        
+        def groupByHospitalAgg() = {
+            val groupProduct = calReport.groupBy(cr => (cr.get("product").toString))
             
-            
-            val achievements = queryProportion(calrep.getAsOrElse[Double]("sales", 0.0),
-                                                calrep.getAsOrElse[Double]("quota", 0.0))
-            
-            // 带查询预设值
-            val quotaContri = queryProportion(calrep.getAsOrElse[Double]("quota", 0.0), 0)
-            
-            val salesContri = queryProportion(calrep.getAsOrElse[Double]("sales", 0.0),
-                                                calrep.getAsOrElse[Double]("sums", 0.0))
-            
-            val salesGrowthMOM = queryProportion(calrep.getAsOrElse[Double]("sales", 0.0),
-                                                calrep.getAsOrElse[Double]("p_sales", 0.0)) - 1
-            
-            val salesGrowthYOY = queryProportion(calrep.getAsOrElse[Double]("sales", 0.0),
-                                                    calrep.getAsOrElse[Double]("pppp_sales", 0.0)) - 1
+            calReport.map { hosp =>
+                val achievements = queryProportion(hosp.getAsOrElse[Double]("sales", 0.0),
+                    hosp.getAsOrElse[Double]("quota", 0.0))
+                val sumQuota = groupProduct.get(hosp.get("product").toString).get.map(_.getAsOrElse[Double]("quota", 0.0)).sum
+                val sumSales = groupProduct.get(hosp.get("product").toString).get.map(_.getAsOrElse[Double]("sales", 0.0)).sum
+                
+                val quotaContri = queryProportion(hosp.getAsOrElse[Double]("quota", 0.0), sumQuota)
     
-            val builder = MongoDBObject.newBuilder
-            builder += "__v" -> 0
-            builder += "achievements" -> achievements // sales / quota
-            builder += "behaviorEfficiency" -> calrep.getAsOrElse[Double]("behavior_efficiency", 0.0)
-            builder += "category" -> None // "Hospital"
-            builder += "drugEntrance" -> calrep.getAsOrElse[String]("status", "")
-            builder += "hospital" -> hospital_id
-            builder += "patientNum" -> calrep.getAsOrElse[Double]("patient", 0.0)
-            builder += "periodId" -> calrep.getAsOrElse[String]("period_id", "")
-            builder += "phase" -> None // calrep.getAsOrElse[Double]("phase", 0.0)
-            builder += "potential" -> calrep.getAsOrElse[Double]("potential", 0.0)
-            builder += "product" -> product_id
-            builder += "productKnowledge" -> calrep.getAsOrElse[Double]("product_knowledge", 0.0)
-            builder += "projectId" -> calrep.getAsOrElse[String]("project_id", "")
-            builder += "proposalId" -> None
-            builder += "quotaContri" -> quotaContri // quota / 预设quota
-            builder += "quotaGrowthMOM" -> calrep.getAsOrElse[Double]("quotaGrowthMOM", 0.0) // 等安琪
-            builder += "region" -> calrep.getAsOrElse[String]("region", "")
-            builder += "resource" -> resource_id
-            builder += "sales" -> calrep.getAsOrElse[Double]("sales", 0.0)
-            builder += "salesContri" -> salesContri // sales / sums
-            builder += "salesGrowthMOM" -> salesGrowthMOM // sales / p_sales -1
-            builder += "salesGrowthYOY" -> salesGrowthYOY // sales / pppp_sales -1
-            builder += "salesQuota" -> calrep.getAsOrElse[Double]("quota", 0.0)
-            builder += "salesSkills" -> calrep.getAsOrElse[Double]("sales_skills", 0.0)
-            builder += "share" -> calrep.getAsOrElse[Double]("share", 0.0)
-            builder += "territoryManagementAbility" -> calrep.getAsOrElse[Double]("territory_management_ability", 0.0)
-            builder += "workMotivation" -> calrep.getAsOrElse[Double]("work_motivation", 0.0)
-            builder.result()
-        })
+                val salesContri = queryProportion(hosp.getAsOrElse[Double]("sales", 0.0), sumSales)
+    
+                val salesGrowthMOM = queryProportion(hosp.getAsOrElse[Double]("sales", 0.0),
+                    hosp.getAsOrElse[Double]("p_sales", 0.0)) - 1
+    
+                val salesGrowthYOY = queryProportion(hosp.getAsOrElse[Double]("sales", 0.0),
+                    hosp.getAsOrElse[Double]("pppp_sales", 0.0)) - 1
+    
+                val quotaGrowthMOM = queryProportion(hosp.getAsOrElse[Double]("quota", 0.0),
+                    hosp.getAsOrElse[Double]("p_sales", 0.0)) - 1
+    
+                val share = hosp.getAs[Double]("market_share") match {
+                    case Some(s) => s
+                    case None => hosp.getAsOrElse[Double]("share", 0.0)
+                }
+    
+                val builder = MongoDBObject.newBuilder
+                builder += "__v" -> 0
+                builder += "achievements" -> achievements // sales / quota
+                builder += "behaviorEfficiency" -> hosp.getAsOrElse[Double]("behavior_efficiency", 0.0)
+                builder += "category" -> "Hospital"
+                builder += "drugEntrance" -> hosp.getAsOrElse[String]("status", "")
+                builder += "hospital" -> queryHospitalId(hosp.getAsOrElse[String]("hospital", ""))
+                builder += "patientNum" -> hosp.getAsOrElse[Double]("patient", 0.0)
+                builder += "periodId" -> periodId
+                builder += "phase" -> phase
+                builder += "potential" -> hosp.getAsOrElse[Double]("potential", 0.0)
+                builder += "product" -> queryProductId(hosp.getAsOrElse[String]("product", ""))
+                builder += "productKnowledge" -> hosp.getAsOrElse[Double]("product_knowledge", 0.0)
+                builder += "projectId" -> projectId
+                builder += "proposalId" -> None
+                builder += "quotaContri" -> quotaContri // quota / p_sales
+                builder += "quotaGrowthMOM" -> quotaGrowthMOM // 当前quota / p_sales - 1
+                builder += "region" -> hosp.getAsOrElse[String]("region", "")
+                builder += "resource" -> queryHospitalId(hosp.getAsOrElse[String]("representative", ""))
+                builder += "sales" -> hosp.getAsOrElse[Double]("sales", 0.0)
+                builder += "salesContri" -> salesContri // sales / sums
+                builder += "salesGrowthMOM" -> salesGrowthMOM // sales / p_sales -1
+                builder += "salesGrowthYOY" -> salesGrowthYOY // sales / pppp_sales -1
+                builder += "salesQuota" -> hosp.getAsOrElse[Double]("quota", 0.0)
+                builder += "salesSkills" -> hosp.getAsOrElse[Double]("sales_skills", 0.0)
+                builder += "share" -> share // Ucb Marker share, TM share 要做处理
+                builder += "territoryManagementAbility" -> hosp.getAsOrElse[Double]("territory_management_ability", 0.0)
+                builder += "workMotivation" -> hosp.getAsOrElse[Double]("work_motivation", 0.0)
+                builder.result()
+            }
+        }
+    
+        def groupByProductAgg() = {
+            val sumQouta = calReport.map(_.getAsOrElse[Double]("quota", 0.0)).sum
+            val sumSales = calReport.map(_.getAsOrElse[Double]("sales", 0.0)).sum
+            calReport.groupBy(cr => cr.get("product")).toList.map { data =>
+                val sales = data._2.map(_.getAsOrElse[Double]("sales", 0.0)).sum
+                val quota = data._2.map(_.getAsOrElse[Double]("quota", 0.0)).sum
+                val potential = data._2.map(_.getAsOrElse[Double]("potential", 0.0)).sum
+                val achievements = queryProportion(sales, quota)
+	            val quotaContri = queryProportion(quota, sumQouta)
+                val salesContri = queryProportion(sales, sumSales)
+	            val salesGrowthMOM = queryProportion(sales, data._2.map(_.getAsOrElse[Double]("p_sales", 0.0)).sum) - 1
+	            val salesGrowthYOY = queryProportion(sales, data._2.map(_.getAsOrElse[Double]("pppp_sales", 0.0)).sum) - 1
+                val quotaGrowthMOM = queryProportion(quota, data._2.map(_.getAsOrElse[Double]("p_sales", 0.0)).sum) - 1
+	            val share = queryProportion(sales, potential)
+                
+                val builder = MongoDBObject.newBuilder
+                builder += "__v" -> 0
+                builder += "achievements" -> achievements // sales / quota
+                builder += "behaviorEfficiency" -> None
+                builder += "category" -> "Product"
+                builder += "drugEntrance" -> None
+                builder += "hospital" -> None
+                builder += "patientNum" -> None
+                builder += "periodId" -> periodId
+                builder += "phase" -> phase
+                builder += "potential" -> None
+                builder += "product" -> queryProductId(data._1.toString)
+                builder += "productKnowledge" -> None
+                builder += "projectId" -> projectId
+                builder += "proposalId" -> None
+                builder += "quotaContri" -> quotaContri //quotaContri // quota / 预设quota
+                builder += "quotaGrowthMOM" -> quotaGrowthMOM
+                builder += "region" -> None
+                builder += "resource" -> None
+                builder += "sales" -> sales
+                builder += "salesContri" -> salesContri //salesContri // sales / sums
+                builder += "salesGrowthMOM" -> salesGrowthMOM //salesGrowthMOM // sales / p_sales -1
+                builder += "salesGrowthYOY" -> salesGrowthYOY //salesGrowthYOY // sales / pppp_sales -1
+                builder += "salesQuota" -> quota
+                builder += "salesSkills" -> None
+                builder += "share" -> share //hosp.getAsOrElse[Double]("share", 0.0)// Ucb Marker share, TM share 要做处理
+                builder += "territoryManagementAbility" -> None //hosp.getAsOrElse[Double]("territory_management_ability", 0.0)
+                builder += "workMotivation" -> None //hosp.getAsOrElse[Double]("work_motivation", 0.0)
+                builder.result()
+            }
+        }
+       
+        def groupByResourceAgg() = {
+            val groupProduct = calReport.groupBy(cr => (cr.get("product").toString))
+            
+            val resource_data = calReport.groupBy(cr => (cr.get("representative"),
+                    cr.get("product"),
+                    cr.get("work_motivation"),
+                    cr.get("territory_management_ability"),
+                    cr.get("sales_skills"),
+                    cr.get("product_knowledge"),
+                    cr.get("behavior_efficiency"))).toList
+            
+            resource_data.map { rd => {
+                val sumQuota = groupProduct.get(rd._1._2.toString).get.map(_.getAsOrElse[Double]("quota", 0.0)).sum
+                val sumSales = groupProduct.get(rd._1._2.toString).get.map(_.getAsOrElse[Double]("sales", 0.0)).sum
+                
+                val sales = rd._2.map(_.getAsOrElse[Double]("sales", 0.0)).sum
+                val quota = rd._2.map(_.getAsOrElse[Double]("quota", 0.0)).sum
+                val potential = rd._2.map(_.getAsOrElse[Double]("potential", 0.0)).sum
+                val achievements = queryProportion(sales, quota)
+                val quotaContri = queryProportion(quota, sumQuota)
+                val salesContri = queryProportion(sales, sumSales)
+                val salesGrowthMOM = queryProportion(sales, rd._2.map(_.getAsOrElse[Double]("p_sales", 0.0)).sum) - 1
+                val salesGrowthYOY = queryProportion(sales, rd._2.map(_.getAsOrElse[Double]("pppp_sales", 0.0)).sum) - 1
+                val quotaGrowthMOM = queryProportion(quota, rd._2.map(_.getAsOrElse[Double]("p_sales", 0.0)).sum) - 1
+                val share = queryProportion(sales, potential)
+                
+                val builder = MongoDBObject.newBuilder
+                builder += "__v" -> 0
+                builder += "achievements" -> achievements // sales / quota
+                builder += "behaviorEfficiency" -> rd._1._7
+                builder += "category" -> "Resource"
+                builder += "drugEntrance" -> None //rd.getAsOrElse[String]("status", "")
+                builder += "hospital" -> None
+                builder += "patientNum" -> None //rd.getAsOrElse[Double]("patient", 0.0)
+                builder += "periodId" -> periodId //hosp.getAsOrElse[String]("period_id", "")
+                builder += "phase" -> phase
+                builder += "potential" -> None//rd.getAsOrElse[Double]("potential", 0.0)
+                builder += "product" -> queryProductId(rd._1._2.toString)
+                builder += "productKnowledge" -> rd._1._6
+                builder += "projectId" -> projectId
+                builder += "proposalId" -> None
+                builder += "quotaContri" -> quotaContri // quota / 预设quota
+                builder += "quotaGrowthMOM" -> quotaGrowthMOM
+                builder += "region" -> None
+                builder += "resource" -> queryResourceId(rd._1._1.toString)
+                builder += "sales" -> sales
+                builder += "salesContri" -> salesContri // sales / sums
+                builder += "salesGrowthMOM" -> salesGrowthMOM // sales / p_sales -1
+                builder += "salesGrowthYOY" -> salesGrowthYOY // sales / pppp_sales -1
+                builder += "salesQuota" -> quota //rd.getAsOrElse[Double]("quota", 0.0)
+                builder += "salesSkills" -> rd._1._5
+                builder += "share" -> share //rd.getAsOrElse[Double]("share", 0.0)// Ucb Marker share, TM share 要做处理
+                builder += "territoryManagementAbility" -> rd._1._4
+                builder += "workMotivation" -> rd._1._3
+                builder.result()
+            }}
+            
+        }
+    
+        (groupByHospitalAgg(), groupByProductAgg() ,groupByResourceAgg())
+        
     }
 
     /**
@@ -524,8 +649,29 @@ package object NTMIOAggregation {
         builder += "period_id" ->  periodId
         builder += "project_id" -> projectId
         val calReports = collCalReport.find(builder.result).toList
+    
+        // emmm
+        val projectCondition = MongoDBObject.newBuilder
+        projectCondition += "_id" -> new ObjectId(projectId)
+    
+        val periods = collProject.findOne(projectCondition.result) match {
+            case Some(dbo) => dbo.getAs[List[ObjectId]]("periods").get // 哇  数据库为啥是ObjectId哦
+            case None => Nil
+        }
+    
+        val presetCondition = MongoDBObject.newBuilder
+        presetCondition += "proposalId" -> projectId
+	    
+        val presets = collPreset.find(presetCondition.result).toList
         
-        calReport2Report(hosps, products, resources, calReports).foreach(bulk.insert(_))
+        val result = calReport2Report(hosps, products,
+                        resources, calReports,
+                        periods.indexOf(new ObjectId(periodId)),
+                        periodId, projectId)
+        result._1 foreach(bulk.insert(_))
+        result._2 foreach(bulk.insert(_))
+        result._3 foreach(bulk.insert(_))
+	    
         bulk.execute()
         jobId
     }
