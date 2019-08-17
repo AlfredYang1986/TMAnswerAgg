@@ -12,7 +12,7 @@ package object NTMIOAggregation {
     val mongodbPort = 27017
     val mongodbUsername = ""
     val mongodbPassword = ""
-    val ntmDBName = "pharbers-ntm-cli"
+    val ntmDBName = "pharbers-ntm-client-10"
     val answerCollName = "answers"
     val presetCollName = "presets"
     val periodCollName = "periods"
