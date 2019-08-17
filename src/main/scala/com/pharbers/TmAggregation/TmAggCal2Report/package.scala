@@ -33,6 +33,8 @@ package object TmAggCal2Report {
         aggHospital(jobResult, hosps, products, resources, curProject, curPeriod, phase)
         aggRegion(jobResult, hosps, products, resources, curProject, curPeriod, phase)
         aggResource(jobResult, hosps, products, resources, curProject, curPeriod, phase)
+
+        aggFinalSummary(curProject, jobId)
     }
 
     def queryNumSafe(x: AnyRef): Double = {
@@ -170,5 +172,25 @@ package object TmAggCal2Report {
                 res.get("representative").toString + "##" +
                     res.get("product").toString
             })
+    }
+
+    def aggFinalSummary(project: DBObject, jobId: String) = {
+        val f = calFinalResult.findOne(DBObject("job_id" -> jobId)).get
+        f += "_id" -> new ObjectId
+
+        f += "quotaAchv" -> f.get("quota_achv")
+        f -= "quota_achv"
+
+        f += "salesForceProductivity" -> f.get("sales_force_productivity")
+        f -= "sales_force_productivity"
+
+        f += "roi" -> f.get("return_on_investment")
+        f -= "return_on_investment"
+
+        f -= "new_account"
+
+        finals.insert(f)
+        project += "finals" -> f._id
+        projectsColl.update(DBObject("_id" -> project._id), project)
     }
 }
