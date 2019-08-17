@@ -15,10 +15,11 @@ package object TmAggPreset2Cal {
 
         val curPeriod = periodsColl.findOne(DBObject("_id" -> new ObjectId(periodId))).getOrElse(null)
         val curProposal = proposalsColl.findOne(DBObject("_id" -> new ObjectId(proposalId))).getOrElse(null)
+        val curProject = projectsColl.findOne(DBObject("_id" -> new ObjectId(projectId))).getOrElse(null)
 
         aggAnswerWithPresetsToTmJobs(
             periodAnswers(curPeriod),
-            loadCurrentPreset(curPeriod, curProposal, phase),
+            loadCurrentPreset(curProject, curProposal, phase),
             hospitalsColl.find(
                 $or(curProposal.getAs[List[ObjectId]]("targets").get
                     .map(x => DBObject("_id" -> x)))).toList,
@@ -42,11 +43,11 @@ package object TmAggPreset2Cal {
         }
     }
 
-    def loadCurrentPreset(period: DBObject, proposal: DBObject, phase: Int): List[DBObject] =
+    def loadCurrentPreset(project: DBObject, proposal: DBObject, phase: Int): List[DBObject] =
         presetsColl.find(
             $or(
-                $and("phase" -> phase, "proposalId" -> proposal._id.toString) ::
-                $and("phase" -> phase, "periodId" -> period._id.toString) :: Nil
+                $and("phase" -> phase, "proposalId" -> proposal._id.get.toString) ::
+                $and("phase" -> phase, "project" -> project._id.get.toString) :: Nil
             )
         ).toList
 
@@ -101,7 +102,7 @@ package object TmAggPreset2Cal {
               */
             presets.find( x =>
                 x.get("hospital") == curHosp.get("_id") &&
-                x.get("product") == curHosp.get("_id") &&
+                x.get("product") == curProduct.get("_id") &&
                 x.get("category") == 8
             ) match {
                 case Some(curHPPreset) => {
@@ -136,10 +137,10 @@ package object TmAggPreset2Cal {
               */
             reportsColl.findOne(
                 $and(
-                    "hospital" -> curHosp.get("_id") ::
-                    "product" -> curProduct.get("_id") ::
-                    "phase" -> phase - 4 ::
-                    "category" -> "Business" :: Nil)
+                    DBObject("hospital" -> curHosp.get("_id")) ::
+                    DBObject("product" -> curProduct.get("_id")) ::
+                    DBObject("phase" -> (phase - 4)) ::
+                    DBObject("category" -> "Business") :: Nil)
             ) match {
                 case Some(pppp) => builder += "pppp_sales" -> pppp.get("sales")
                 case None => builder += "pppp_sales" -> 0
@@ -266,10 +267,11 @@ package object TmAggPreset2Cal {
 
             bulk.insert(builder.result)
         }
-
+        bulk.execute()
         /**
           * 8. 竞争品
           */
+        val bulk02 = calCompColl.initializeOrderedBulkOperation
         products.filter(_.get("productType") == 1).foreach { x =>
             val builder = MongoDBObject.newBuilder
             val tmp = presets.find ( y =>
@@ -289,10 +291,9 @@ package object TmAggPreset2Cal {
             if (proposal.get("case") == "tm") builder += "p_share" -> tmp.get("share")
             else builder += "market_share_c" -> tmp.get("share")
 
-            bulk.insert(builder.result)
+            bulk02.insert(builder.result)
         }
-
-        bulk.execute()
+        bulk02.execute()
         jobId
     }
 }
