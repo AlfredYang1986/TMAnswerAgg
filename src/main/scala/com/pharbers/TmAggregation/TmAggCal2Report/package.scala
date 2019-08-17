@@ -33,6 +33,7 @@ package object TmAggCal2Report {
         aggHospital(jobResult, hosps, products, resources, curProject, curPeriod, phase)
         aggRegion(jobResult, hosps, products, resources, curProject, curPeriod, phase)
         aggResource(jobResult, hosps, products, resources, curProject, curPeriod, phase)
+        aggProduct(jobResult, hosps, products, resources, curProject, curPeriod, phase)
 
         aggFinalSummary(curProject, jobId)
     }
@@ -90,12 +91,12 @@ package object TmAggCal2Report {
               *  - achievements
               */
             builder += "sales" -> items.map(x => queryNumSafe(x.get("sales"))).sum
-            builder += "salesContri" -> items.map(x => queryNumSafe(x.get("sales"))).sum
+            builder += "salesContri" -> 0.0
             builder += "salesGrowthYOY" -> 0.0
             builder += "salesGrowthMOM" -> 0.0
             builder += "salesQuota" -> items.map(x => queryNumSafe(x.get("quota"))).sum
             builder += "quotaGrowthMOM" -> 0.0
-            builder += "share" -> items.map(x => queryNumSafe(x.get("share"))).sum
+            builder += "share" -> 0.0
             builder += "achievements" -> items.map(x => queryNumSafe(x.get("achievements"))).sum
 
 
@@ -173,6 +174,23 @@ package object TmAggCal2Report {
                     res.get("product").toString
             })
     }
+
+    def aggProduct(results: List[DBObject],
+                   hospitals: List[DBObject],
+                   products: List[DBObject],
+                   resources: List[DBObject],
+                   project: DBObject,
+                   period: DBObject,
+                   phase: Int) = {
+
+        aggReport(
+            results, hospitals, products, resources,
+            project, period, phase, "Product",
+            (res) => { "##" + queryStringSafe(res.get("product")) })
+    }
+
+
+
 
     def aggFinalSummary(project: DBObject, jobId: String) = {
         val f = calFinalResult.findOne(DBObject("job_id" -> jobId)).get
