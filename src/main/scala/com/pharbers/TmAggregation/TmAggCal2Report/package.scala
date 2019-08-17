@@ -38,6 +38,11 @@ package object TmAggCal2Report {
         else x.toString.toDouble
     }
 
+    def queryStringSafe(x: AnyRef): String = {
+        if (x == null) ""
+        else x.toString
+    }
+
 
     def aggHospital(
                        results: List[DBObject],
@@ -64,7 +69,7 @@ package object TmAggCal2Report {
             builder += "hospital" -> hospitals.find(_.get("name") == hn).get._id
             builder += "product" -> products.find(_.get("name") == pn).get._id
             builder += "resource" -> resources.find(_.get("name") == rn).get._id
-            builder += "region" -> items.head.get("region")
+            builder += "region" -> queryStringSafe(items.head.get("region"))
 
             /**
               * 1. report 内容
