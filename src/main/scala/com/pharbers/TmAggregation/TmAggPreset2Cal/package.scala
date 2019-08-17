@@ -107,7 +107,7 @@ package object TmAggPreset2Cal {
             ) match {
                 case Some(curHPPreset) => {
                     builder += "status" -> (
-                        if (curHPPreset.get("currentDurgEntrance") == 1) "已开发"
+                        if (curHPPreset.get("currentDurgEntrance").toString == "1") "已开发"
                         else "未开发")
 
                     builder += "p_sales" -> curHPPreset.get("lastSales")
@@ -140,9 +140,11 @@ package object TmAggPreset2Cal {
                     DBObject("hospital" -> curHosp.get("_id")) ::
                     DBObject("product" -> curProduct.get("_id")) ::
                     DBObject("phase" -> (phase - 4)) ::
-                    DBObject("category" -> "Business") :: Nil)
+                    DBObject("category" -> "Hospital") :: Nil)
             ) match {
-                case Some(pppp) => builder += "pppp_sales" -> pppp.get("sales")
+                case Some(pppp) => {
+                    builder += "pppp_sales" -> pppp.get("sales")
+                }
                 case None => builder += "pppp_sales" -> 0
             }
 
