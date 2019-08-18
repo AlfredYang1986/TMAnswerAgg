@@ -151,6 +151,23 @@ package object TmAggReport2Show {
             }
         }
 
+        resources.find( x => x.get("_id") == report.get("resource")) match {
+            case Some(r) => {
+                builder += "representative" -> r.get("name")
+                builder += "representative_time" -> 0.0
+            }
+            case None => {
+                builder += "representative" -> ""
+                builder += "representative_time" -> 0.0
+            }
+        }
+
+        builder += "work_motivation" -> 0.0
+        builder += "territory_management_ability" -> 0.0
+        builder += "sales_skills" -> 0.0
+        builder += "product_knowledge" -> 0.0
+        builder += "behavior_efficiency" -> 0.0
+
         builder.result()
     }
 }
