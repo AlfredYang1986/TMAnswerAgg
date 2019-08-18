@@ -34,6 +34,7 @@ package object TmAggCal2Report {
         aggRegion(jobResult, hosps, products, resources, curProject, curPeriod, phase)
         aggResource(jobResult, hosps, products, resources, curProject, curPeriod, phase)
         aggProduct(jobResult, hosps, products, resources, curProject, curPeriod, phase)
+        aggSales(jobResult, hosps, products, resources, curProject, curPeriod, phase)
 
         aggPreset(jobResult, hosps, products, resources, curProject, curPeriod, phase) // category 8
         aggResourcePreset(jobResult, hosps, products, resources, curProject, curPeriod, phase) // category 2
@@ -347,6 +348,20 @@ package object TmAggCal2Report {
             (res) => { "##" + queryStringSafe(res.get("product")) })
     }
 
+    def aggSales(results: List[DBObject],
+                   hospitals: List[DBObject],
+                   products: List[DBObject],
+                   resources: List[DBObject],
+                   project: DBObject,
+                   period: DBObject,
+                   phase: Int) = {
+
+        aggReport(
+            results, hospitals, products, resources,
+            project, period, phase, "Sales",
+            (res) => "##")
+    }
+
     def aggFinalSummary(project: DBObject, jobId: String) = {
         val f = calFinalResult.findOne(DBObject("job_id" -> jobId)).get
         f += "_id" -> new ObjectId
@@ -363,7 +378,11 @@ package object TmAggCal2Report {
         f -= "new_account"
 
         finals.insert(f)
-        project += "finals" -> f._id
+        val lst = project.getAs[List[ObjectId]]("finals") match {
+            case Some(lst) => lst :+ f._id
+            case None => f._id
+        }
+        project += "finals" -> lst
         projectsColl.update(DBObject("_id" -> project._id), project)
     }
 }
