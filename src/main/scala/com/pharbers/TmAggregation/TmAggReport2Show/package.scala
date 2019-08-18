@@ -133,10 +133,12 @@ package object TmAggReport2Show {
             case Some(h) => {
                 builder += "hospital" -> h.get("name")
                 builder += "hospital_level" -> h.get("level")
+                builder += "region" -> h.get("position")
             }
             case None => {
                 builder += "hospital" -> ""
                 builder += "hospital_level" -> ""
+                builder += "region" -> ""
             }
         }
 
