@@ -8,7 +8,7 @@ object AggMongoOpt {
     val mongodbPort = 27017
     val mongodbUsername = ""
     val mongodbPassword = ""
-    val ntmDBName = "pharbers-ntm-client-10"
+    val ntmDBName = "pharbers-ntm-client"
 
     lazy val db = MongoClient(mongodbHost, mongodbPort)(ntmDBName)
     var colls: Map[AggCollEnum, MongoCollection] = Map.empty
