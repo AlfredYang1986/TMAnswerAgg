@@ -328,8 +328,8 @@ package object TmAggPreset2Cal {
             builder += "product" -> x.get("name")
             builder += "product_area" -> x.get("treatmentArea")
     
-            if (proposal.get("case") == "tm") builder += "p_share" -> tmp.get("share")
-            else builder += "market_share_c" -> tmp.get("share")
+            if (proposal.get("case") == "tm") builder += "p_share" -> queryNumSafe(tmp.get("lastShare"))
+            else builder += "market_share_c" -> queryNumSafe(tmp.get("lastShare"))
     
             bulk02.insert(builder.result)
         }
