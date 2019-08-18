@@ -147,15 +147,15 @@ package object TmAggPreset2Cal {
                         if (curHPPreset.get("currentDurgEntrance").toString == "1") "已开发"
                         else "未开发")
     
-                    builder += "p_sales" -> curHPPreset.get("lastSales")
-                    builder += "p_quota" -> curHPPreset.get("lastQuota")
-                    builder += "p_share" -> curHPPreset.get("lastShare")
-                    builder += "p_budget" -> curHPPreset.get("lastBudget")
+                    builder += "p_sales" -> queryNumSafe(curHPPreset.get("lastSales"))
+                    builder += "p_quota" -> queryNumSafe(curHPPreset.get("lastQuota"))
+                    builder += "p_share" -> queryNumSafe(curHPPreset.get("lastShare"))
+                    builder += "p_budget" -> queryNumSafe(curHPPreset.get("lastBudget"))
     
-                    builder += "patient" -> curHPPreset.get("currentPatientNum")
-                    builder += "p_ytd_sales" -> curHPPreset.get("ytd")
-                    builder += "potential" -> curHPPreset.get("potential")
-                    builder += "initial_budget" -> curHPPreset.get("initBudget")
+                    builder += "patient" -> queryNumSafe(curHPPreset.get("currentPatientNum"))
+                    builder += "p_ytd_sales" -> queryNumSafe(curHPPreset.get("ytd"))
+                    builder += "potential" -> queryNumSafe(curHPPreset.get("potential"))
+                    builder += "initial_budget" -> queryNumSafe(curHPPreset.get("initBudget"))
                 }
                 case None => {
                     builder += "p_sales" -> 0
@@ -180,9 +180,9 @@ package object TmAggPreset2Cal {
                         DBObject("category" -> "Hospital") :: Nil)
             ) match {
                 case Some(pppp) => {
-                    builder += "pppp_sales" -> pppp.get("sales")
+                    builder += "pppp_sales" -> queryNumSafe(pppp.get("sales"))
                 }
-                case None => builder += "pppp_sales" -> 0
+                case None => builder += "pppp_sales" -> 0.0
             }
     
     
@@ -360,7 +360,12 @@ package object TmAggPreset2Cal {
             case None => (Nil, Nil, Nil)
         }
     }
-    
+
+    def queryNumSafe(x: AnyRef): Double = {
+        if (x == null) 0.0
+        else x.toString.toDouble
+    }
+
     /**
       * 临时数据
       */
