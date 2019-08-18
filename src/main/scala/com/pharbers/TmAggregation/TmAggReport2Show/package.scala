@@ -133,10 +133,12 @@ package object TmAggReport2Show {
             case Some(h) => {
                 builder += "hospital" -> h.get("name")
                 builder += "hospital_level" -> h.get("level")
+                builder += "region" -> h.get("position")
             }
             case None => {
                 builder += "hospital" -> ""
                 builder += "hospital_level" -> ""
+                builder += "region" -> report.get("region")
             }
         }
 
@@ -167,6 +169,17 @@ package object TmAggReport2Show {
         builder += "sales_skills" -> 0.0
         builder += "product_knowledge" -> 0.0
         builder += "behavior_efficiency" -> 0.0
+
+        products.find( x => x.get("_id") == report.get("product")) match {
+            case Some(r) => {
+                builder += "product_area" -> r.get("treatmentArea")
+                builder += "status" -> (if (r.get("name") == "开拓来") "已开发" else "未开发")
+            }
+            case None => {
+                builder += "product_area" -> ""
+                builder += "status" -> ""
+            }
+        }
 
         builder.result()
     }

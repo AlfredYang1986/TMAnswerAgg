@@ -155,7 +155,8 @@ package object TmAggPreset2Cal {
                     builder += "patient" -> queryNumSafe(curHPPreset.get("currentPatientNum"))
                     builder += "p_ytd_sales" -> queryNumSafe(curHPPreset.get("ytd"))
                     builder += "potential" -> queryNumSafe(curHPPreset.get("potential"))
-                    builder += "initial_budget" -> queryNumSafe(curHPPreset.get("initBudget"))
+                    val ib = queryNumSafe(curHPPreset.get("initBudget"))
+                    builder += "initial_budget" -> (if (ib == 0) 250000.0 else ib)
                 }
                 case None => {
                     builder += "p_sales" -> 0
