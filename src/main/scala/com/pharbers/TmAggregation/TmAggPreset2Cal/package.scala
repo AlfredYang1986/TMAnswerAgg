@@ -34,42 +34,44 @@ package object TmAggPreset2Cal {
             projectId,
             phase
         )
-    
-        var condition = DBObject("category" -> "Hospital", "phase" -> (phase - 1), "proposalId" -> proposalId)
-        val prports = reportsColl.find(condition).toList
-        val info = infoWithProposal(proposalId)
-        val resultDatap = aggTemporaryData(
-                                    prports,
-                                    info._1,
-                                    info._2,
-                                    info._3,
-                                    loadCurrentPreset(curProject, curProposal, phase),
-                                    phase,
-                                    jobId,
-                                    projectId,
-                                    curPeriod.get("_id").toString)
-    
-        val bulkp = calData1.initializeOrderedBulkOperation
-        resultDatap.foreach(bulkp.insert(_))
-        bulkp.execute()
-    
-        condition = DBObject("category" -> "Hospital", "phase" -> (phase - 2), "proposalId" -> proposalId)
-        val ppreports = reportsColl.find(condition).toList
-        val resultDatapp = aggTemporaryData(
-                                            ppreports,
-                                            info._1,
-                                            info._2,
-                                            info._3,
-                                            loadCurrentPreset(curProject, curProposal, phase + 1),
-                                            phase,
-                                            jobId,
-                                            projectId,
-                                            curPeriod.get("_id").toString)
-    
-        val bulkpp = calData2.initializeOrderedBulkOperation
-        resultDatapp.foreach(bulkpp.insert(_))
-        bulkpp.execute()
-        
+
+        if (curProposal.get("case") == "ucb") {
+            var condition = DBObject("category" -> "Hospital", "phase" -> (phase - 1), "proposalId" -> proposalId)
+            val prports = reportsColl.find(condition).toList
+            val info = infoWithProposal(proposalId)
+            val resultDatap = aggTemporaryData(
+                prports,
+                info._1,
+                info._2,
+                info._3,
+                loadCurrentPreset(curProject, curProposal, phase),
+                phase,
+                jobId,
+                projectId,
+                curPeriod.get("_id").toString)
+
+            val bulkp = calData1.initializeOrderedBulkOperation
+            resultDatap.foreach(bulkp.insert(_))
+            bulkp.execute()
+
+            condition = DBObject("category" -> "Hospital", "phase" -> (phase - 2), "proposalId" -> proposalId)
+            val ppreports = reportsColl.find(condition).toList
+            val resultDatapp = aggTemporaryData(
+                ppreports,
+                info._1,
+                info._2,
+                info._3,
+                loadCurrentPreset(curProject, curProposal, phase + 1),
+                phase,
+                jobId,
+                projectId,
+                curPeriod.get("_id").toString)
+
+            val bulkpp = calData2.initializeOrderedBulkOperation
+            resultDatapp.foreach(bulkpp.insert(_))
+            bulkpp.execute()
+        }
+
         jobId
     }
     
