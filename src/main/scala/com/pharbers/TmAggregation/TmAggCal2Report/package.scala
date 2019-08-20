@@ -434,7 +434,7 @@ package object TmAggCal2Report {
 		f += "roi" -> f.get("return_on_investment")
 		f -= "return_on_investment"
 
-		f -= "new_account"
+        f += "newAccount" -> f.get("new_account")
 
 		finals.insert(f)
 		val lst = project.getAs[List[ObjectId]]("finals") match {
