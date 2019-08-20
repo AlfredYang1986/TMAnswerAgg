@@ -4,8 +4,8 @@ import com.mongodb.casbah.Imports._
 import com.pharbers.TmAggregation.TmAggMongoHandler.AggCollEnum.AggCollEnum
 
 object AggMongoOpt {
-    val mongodbHost = "192.168.100.176"
-    val mongodbPort = 27017
+    val mongodbHost = "pharbers.com"
+    val mongodbPort = 5555
     val mongodbUsername = ""
     val mongodbPassword = ""
     val ntmDBName = "pharbers-ntm-client"
