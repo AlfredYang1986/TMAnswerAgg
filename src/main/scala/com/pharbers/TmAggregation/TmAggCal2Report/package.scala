@@ -30,13 +30,16 @@ package object TmAggCal2Report {
                     .map(x => DBObject("_id" -> x)))).toList
         )
 
-        aggHospital(jobResult, hosps, products, resources, curProject, curPeriod, phase)
-        aggRegion(jobResult, hosps, products, resources, curProject, curPeriod, phase)
-        aggResource(jobResult, hosps, products, resources, curProject, curPeriod, phase)
-        aggProduct(jobResult, hosps, products, resources, curProject, curPeriod, phase)
-        aggSales(jobResult, hosps, products, resources, curProject, curPeriod, phase)
+        val competitors = calCompetitorColl.find(
+	        $and("job_id" -> jobId, "period_id" -> periodId, "project_id" -> projectId)).toList
 
-        aggPreset(jobResult, hosps, products, resources, curProject, curPeriod, phase) // category 8
+        aggHospital(jobResult, hosps, products, resources, curProject, curPeriod, curProposal, phase)
+        aggRegion(jobResult, hosps, products, resources, curProject, curPeriod, curProposal, phase)
+        aggResource(jobResult, hosps, products, resources, curProject, curPeriod, curProposal, phase)
+        aggProduct(jobResult, hosps, products, resources, curProject, curPeriod, curProposal, phase)
+        aggSales(jobResult, hosps, products, resources, curProject, curPeriod, curProposal, phase)
+
+        aggPreset(jobResult, hosps, products, competitors, resources, curProject, curPeriod, phase) // category 8
         aggResourcePreset(jobResult, hosps, products, resources, curProject, curPeriod, phase) // category 2
         aggQuotaPreset(jobResult, hosps, products, resources, curProject, curPeriod, phase) // category 4
 
@@ -65,6 +68,7 @@ package object TmAggCal2Report {
                        resources: List[DBObject],
                        project: DBObject,
                        period: DBObject,
+                       proposal: DBObject,
                        phase: Int,
                        cat: String,
                        func: DBObject => String) = {
@@ -106,6 +110,7 @@ package object TmAggCal2Report {
 
             builder += "projectId" -> project._id.get.toString
             builder += "periodId" -> period._id.get.toString
+            builder += "proposalId" -> proposal._id.get.toString
 
             bulk.insert(builder.result)
         }
@@ -223,6 +228,7 @@ package object TmAggCal2Report {
                      results: List[DBObject],
                      hospitals: List[DBObject],
                      products: List[DBObject],
+                     competitors: List[DBObject],
                      resources: List[DBObject],
                      project: DBObject,
                      period: DBObject,
@@ -251,6 +257,8 @@ package object TmAggCal2Report {
             builder += "product" -> products.find(_.get("name") == pn).get._id
             builder += "resource" -> resources.find(_.get("name") == rn).get._id
 
+	        builder += "project" -> project._id.get.toString
+
             builder += "lastSales" -> queryNumSafe(res.get("sales"))
             builder += "lastQuota" -> queryNumSafe(res.get("quota"))
             builder += "lastAchievement" -> queryNumSafe(res.get("achievements"))
@@ -276,6 +284,47 @@ package object TmAggCal2Report {
             bulk.insert(builder.result())
         }
 
+	    competitors.foreach { comp =>
+		    val builder = MongoDBObject.newBuilder
+		    /**
+		      * 1. category 8 for next period
+		      */
+		    val hn = null
+		    val pn = comp.get("product")
+		    val rn = null
+		    builder += "phase" -> (phase + 1)
+		    builder += "category" -> 16
+		    builder += "hospital" -> hn
+		    builder += "product" -> products.find(_.get("name") == pn).get._id
+		    builder += "resource" -> rn
+
+		    builder += "project" -> project._id.get.toString
+
+		    builder += "lastSales" -> queryNumSafe(comp.get("sales"))
+		    builder += "lastQuota" -> null
+		    builder += "lastAchievement" -> null
+		    builder += "lastShare" -> queryNumSafe(comp.get("market_share"))
+		    builder += "lastBudget" -> null
+		    builder += "initBudget" -> null
+		    builder += "currentPatientNum" -> null
+		    builder += "currentDurgEntrance" -> null
+		    builder += "potential" -> null
+		    builder += "ytd" -> null
+
+		    builder += "currentTMA" -> 0.0
+		    builder += "currentSalesSkills" -> 0.0
+		    builder += "currentProductKnowledge" -> 0.0
+		    builder += "currentBehaviorEfficiency" -> 0.0
+		    builder += "currentWorkMotivation" -> 0.0
+		    builder += "currentTargetDoctorNum" -> 0.0
+		    builder += "currentTargetDoctorCoverage" -> 0.0
+		    builder += "currentClsADoctorVT" -> 0.0
+		    builder += "currentClsBDoctorVT" -> 0.0
+		    builder += "currentClsCDoctorVT" -> 0.0
+
+		    bulk.insert(builder.result())
+	    }
+
         bulk.execute()
     }
 
@@ -286,11 +335,12 @@ package object TmAggCal2Report {
                        resources: List[DBObject],
                        project: DBObject,
                        period: DBObject,
+                       proposal: DBObject,
                        phase: Int) = {
 
         aggReport(
             results, hospitals, products, resources,
-            project, period, phase, "Hospital",
+            project, period, proposal, phase, "Hospital",
             (res) => {
                 res.get("hospital").toString + "##" +
                     res.get("product").toString + "##" +
@@ -305,11 +355,12 @@ package object TmAggCal2Report {
                        resources: List[DBObject],
                        project: DBObject,
                        period: DBObject,
+                       proposal: DBObject,
                        phase: Int) = {
 
         aggReport(
             results, hospitals, products, resources,
-            project, period, phase, "Region",
+            project, period, proposal, phase, "Region",
             (res) => {
                 queryStringSafe(res.get("city")) + "##" +
                     res.get("product").toString
@@ -323,11 +374,12 @@ package object TmAggCal2Report {
                        resources: List[DBObject],
                        project: DBObject,
                        period: DBObject,
+                       proposal: DBObject,
                        phase: Int) = {
 
         aggReport(
             results, hospitals, products, resources,
-            project, period, phase, "Resource",
+            project, period, proposal, phase, "Resource",
             (res) => {
                 res.get("representative").toString + "##" +
                     res.get("product").toString
@@ -340,11 +392,12 @@ package object TmAggCal2Report {
                    resources: List[DBObject],
                    project: DBObject,
                    period: DBObject,
+                   proposal: DBObject,
                    phase: Int) = {
 
         aggReport(
             results, hospitals, products, resources,
-            project, period, phase, "Product",
+            project, period, proposal, phase, "Product",
             (res) => { "##" + queryStringSafe(res.get("product")) })
     }
 
@@ -354,11 +407,12 @@ package object TmAggCal2Report {
                    resources: List[DBObject],
                    project: DBObject,
                    period: DBObject,
+                 proposal: DBObject,
                    phase: Int) = {
 
         aggReport(
             results, hospitals, products, resources,
-            project, period, phase, "Sales",
+            project, period, proposal, phase, "Sales",
             (res) => "##")
     }
 
