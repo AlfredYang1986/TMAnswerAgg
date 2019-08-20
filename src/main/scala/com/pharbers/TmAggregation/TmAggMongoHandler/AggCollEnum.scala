@@ -16,6 +16,7 @@ object AggCollEnum extends Enumeration {
     val calColl = "cal"
     val calCompColl = "cal_comp"
     val calReportColl = "cal_report"
+    val calCompetitorColl = "cal_competitor"
 
     val showReportColl = "show_report"
     val calFinalResult = "cal_FinalSummary"
