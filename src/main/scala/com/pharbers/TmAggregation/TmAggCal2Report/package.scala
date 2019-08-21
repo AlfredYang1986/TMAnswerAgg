@@ -14,7 +14,7 @@ package object TmAggCal2Report {
 
 		val jobResult = calReportColl.find(DBObject("job_id" -> jobId)).toList.filter { x =>
             x.get("hospital") != null &&
-            x.get("project") != null &&
+            x.get("product") != null &&
             x.get("representative") != null
         }
 
