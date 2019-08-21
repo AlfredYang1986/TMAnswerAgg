@@ -8,7 +8,7 @@ class AggTest extends FunSuite {
         println("start")
         println(TmAggPreset2Cal.apply("5d57ed3cab0bf2192d416afb",
             "5d5b60f7c9f8a1002b9546a6",
-            "5d5be64552942e22fdd09cbe", 0))
+            "5d5cdd319d1ae902af0af0b7", 2))
 //        println(TmAggPreset2Cal.apply("5d57ed3cab0bf2192d416afb",
 //            "5d57f2946db007183e2628e9",
 //            "5d57f2946db007183e2628ea", 0))

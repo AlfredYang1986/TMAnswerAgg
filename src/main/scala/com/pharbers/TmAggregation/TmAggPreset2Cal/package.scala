@@ -406,12 +406,12 @@ package object TmAggPreset2Cal {
 			val builder = MongoDBObject.newBuilder
 
 			val p = presets.find(_.getAsOrElse[ObjectId]("hospital", null) ==
-				rep.getAsOrElse[ObjectId]("hospital", null))
+				rep.getAsOrElse[ObjectId]("hospital", null)).getOrElse(DBObject())
 
 
-			builder += "budget" -> p.get.getAsOrElse[Int]("lastBudget", 0)
-			builder += "status" -> (if (p.get("currentDurgEntrance").toString == "1") "已开发"
-			else if (p.get("currentDurgEntrance").toString == "2") "正在开发"
+			builder += "budget" -> p.getAsOrElse[Int]("lastBudget", 0)
+			builder += "status" -> (if (p.get("currentDurgEntrance") == "1") "已开发"
+			else if (p.get("currentDurgEntrance") == "2") "正在开发"
 			else "未开发")
 			builder += "hospital" -> hospital
 			builder += "product" -> product
@@ -419,7 +419,7 @@ package object TmAggPreset2Cal {
 			builder += "sales" -> rep.getAsOrElse[Double]("sales", 0.0)
 			builder += "quota" -> rep.getAsOrElse[Double]("quota", 0.0)
 			builder += "phase" -> phase
-			builder += "ytd_sales" -> p.get.getAsOrElse[Double]("ytd", 0.0)
+			builder += "ytd_sales" -> p.getAsOrElse[Double]("ytd", 0.0)
 			builder += "period_id" -> periodId
 			builder += "project_id" -> projectId
 			builder += "job_id" -> jobId
