@@ -78,7 +78,9 @@ package object TmAggCal2Report {
 		results.groupBy(func(_)).foreach { it =>
 
 			val items = it._2
-			val (hn :: pn :: rn :: Nil) = queryName(it._2.head).split("##").toList
+            val tmp = queryName(it._2.head).split("##").toList
+            val (hn :: pn :: rn :: Nil) = if (tmp.isEmpty) "" :: "" :: "" :: Nil else tmp
+//			val (hn :: pn :: rn :: Nil) = queryName(it._2.head).split("##").toList
 			val builder = MongoDBObject.newBuilder
 			builder += "phase" -> phase
 			builder += "category" -> cat //"Hospital"
