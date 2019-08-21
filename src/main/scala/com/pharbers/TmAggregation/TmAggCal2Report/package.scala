@@ -12,7 +12,11 @@ package object TmAggCal2Report {
 		         periodId: String,
 		         phase: Int = 0): Unit = {
 
-		val jobResult = calReportColl.find(DBObject("job_id" -> jobId)).toList
+		val jobResult = calReportColl.find(DBObject("job_id" -> jobId)).toList.filter { x =>
+            x.get("hospital") != null &&
+            x.get("project") != null &&
+            x.get("representative") != null
+        }
 
 		val curPeriod = periodsColl.findOne(DBObject("_id" -> new ObjectId(periodId))).getOrElse(null)
 		val curProposal = proposalsColl.findOne(DBObject("_id" -> new ObjectId(proposalId))).getOrElse(null)
@@ -78,45 +82,42 @@ package object TmAggCal2Report {
 		results.groupBy(func(_)).foreach { it =>
 
 			val items = it._2
-            val tmp = queryName(it._2.head).split("##").toList
-            if (!tmp.isEmpty) {
-                val (hn :: pn :: rn :: Nil) = queryName(it._2.head).split("##").toList
-                val builder = MongoDBObject.newBuilder
-                builder += "phase" -> phase
-                builder += "category" -> cat //"Hospital"
-                builder += "hospital" -> hospitals.find(_.get("name") == hn).get._id
-                builder += "product" -> products.find(_.get("name") == pn).get._id
-                builder += "resource" -> resources.find(_.get("name") == rn).get._id
-                builder += "region" -> queryStringSafe(items.head.get("city"))
+            val (hn :: pn :: rn :: Nil) = queryName(it._2.head).split("##").toList
+            val builder = MongoDBObject.newBuilder
+            builder += "phase" -> phase
+            builder += "category" -> cat //"Hospital"
+            builder += "hospital" -> hospitals.find(_.get("name") == hn).get._id
+            builder += "product" -> products.find(_.get("name") == pn).get._id
+            builder += "resource" -> resources.find(_.get("name") == rn).get._id
+            builder += "region" -> queryStringSafe(items.head.get("city"))
 
-                /**
-                  * 1. report 内容
-                  *  - sales
-                  *  - salesContri
-                  *  - salesQuota
-                  *  - quotaGrowthMOM
-                  *  - quotaContri
-                  *  - share
-                  *  - salesGrowthYOY
-                  *  - salesGrowthMOM
-                  *  - achievements
-                  */
-                builder += "sales" -> items.map(x => queryNumSafe(x.get("sales"))).sum
-                builder += "salesContri" -> 0.0
-                builder += "salesGrowthYOY" -> 0.0
-                builder += "salesGrowthMOM" -> 0.0
-                builder += "salesQuota" -> items.map(x => queryNumSafe(x.get("quota"))).sum
-                builder += "quotaGrowthMOM" -> 0.0
-                builder += "share" -> 0.0
-                builder += "achievements" -> items.map(x => queryNumSafe(x.get("achievements"))).sum
+            /**
+              * 1. report 内容
+              *  - sales
+              *  - salesContri
+              *  - salesQuota
+              *  - quotaGrowthMOM
+              *  - quotaContri
+              *  - share
+              *  - salesGrowthYOY
+              *  - salesGrowthMOM
+              *  - achievements
+              */
+            builder += "sales" -> items.map(x => queryNumSafe(x.get("sales"))).sum
+            builder += "salesContri" -> 0.0
+            builder += "salesGrowthYOY" -> 0.0
+            builder += "salesGrowthMOM" -> 0.0
+            builder += "salesQuota" -> items.map(x => queryNumSafe(x.get("quota"))).sum
+            builder += "quotaGrowthMOM" -> 0.0
+            builder += "share" -> 0.0
+            builder += "achievements" -> items.map(x => queryNumSafe(x.get("achievements"))).sum
 
-                builder += "projectId" -> project._id.get.toString
-                builder += "periodId" -> period._id.get.toString
-                builder += "proposalId" -> proposal._id.get.toString
+            builder += "projectId" -> project._id.get.toString
+            builder += "periodId" -> period._id.get.toString
+            builder += "proposalId" -> proposal._id.get.toString
 
-                bulk.insert(builder.result)
-            }
-		}
+            bulk.insert(builder.result)
+        }
 
 		bulk.execute()
 	}
