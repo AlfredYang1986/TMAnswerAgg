@@ -57,9 +57,9 @@ package object TmAggCal2Report {
 	}
 
 	def queryName(x: DBObject): String =
-		x.get("hospital").toString + "##" +
-			x.get("product").toString + "##" +
-			x.get("representative").toString
+		queryStringSafe(x.get("hospital")) + "##" +
+			queryStringSafe(x.get("product")) + "##" +
+			queryStringSafe(x.get("representative"))
 
 	def aggReport(
 		             results: List[DBObject],
@@ -345,9 +345,9 @@ package object TmAggCal2Report {
 			results, hospitals, products, resources,
 			project, period, proposal, phase, "Hospital",
 			(res) => {
-				res.get("hospital").toString + "##" +
-					res.get("product").toString + "##" +
-					res.get("representative").toString
+				queryStringSafe(res.get("hospital")) + "##" +
+					queryStringSafe(res.get("product")) + "##" +
+					queryStringSafe(res.get("representative"))
 			})
 	}
 
@@ -366,7 +366,7 @@ package object TmAggCal2Report {
 			project, period, proposal, phase, "Region",
 			(res) => {
 				queryStringSafe(res.get("city")) + "##" +
-					res.get("product").toString
+					queryStringSafe(res.get("product"))
 			})
 	}
 
@@ -384,8 +384,8 @@ package object TmAggCal2Report {
 			results, hospitals, products, resources,
 			project, period, proposal, phase, "Resource",
 			(res) => {
-				res.get("representative").toString + "##" +
-					res.get("product").toString
+				queryStringSafe(res.get("representative")) + "##" +
+					queryStringSafe(res.get("product"))
 			})
 	}
 
