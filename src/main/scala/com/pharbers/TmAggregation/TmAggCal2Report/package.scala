@@ -262,7 +262,7 @@ package object TmAggCal2Report {
 			builder += "product" -> products.find(_.get("name") == pn).get._id
 			builder += "resource" -> resources.find(_.get("name") == rn).get._id
 
-			builder += "project" -> project._id.get.toString
+			builder += "projectId" -> project._id.get.toString
 
 			builder += "lastSales" -> queryNumSafe(res.get("sales"))
 			builder += "lastQuota" -> queryNumSafe(res.get("quota"))
@@ -305,7 +305,7 @@ package object TmAggCal2Report {
 			builder += "product" -> products.find(_.get("name") == pn).get._id
 			builder += "resource" -> rn
 
-			builder += "project" -> project._id.get.toString
+			builder += "projectId" -> project._id.get.toString
 
 			builder += "lastSales" -> queryNumSafe(comp.get("sales"))
 			builder += "lastQuota" -> 0.0
