@@ -86,7 +86,7 @@ package object TmAggPreset2Cal {
 		presetsColl.find(
 			$or(
 				$and("phase" -> phase, "proposalId" -> proposal._id.get.toString) ::
-					$and("phase" -> phase, "project" -> project._id.get.toString) :: Nil
+					$and("phase" -> phase, "projectId" -> project._id.get.toString) :: Nil
 			)
 		).toList
 
@@ -317,11 +317,17 @@ package object TmAggPreset2Cal {
 		val bulk02 = calCompColl.initializeOrderedBulkOperation
 		products.filter(_.get("productType") == 1).foreach { x =>
 			val builder = MongoDBObject.newBuilder
-			val tmp = presets.find(y =>
-				y.get("product") == x.get("_id") &&
-					y.get("category") == 16 &&
-					y.get("phase") == phase
-			).get
+			val tmp = try {
+				presets.find(y =>
+					y.get("product") == x.get("_id") &&
+							y.get("category") == 16 &&
+							y.get("phase") == phase
+				).get
+			} catch {
+				case e: Exception =>
+					println(x)
+					throw e
+			}
 
 			builder += "job_id" -> jobId
 			builder += "project_id" -> projectId
