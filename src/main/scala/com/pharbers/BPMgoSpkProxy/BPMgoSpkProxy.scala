@@ -3,8 +3,8 @@ package com.pharbers.BPMgoSpkProxy
 import com.mongodb.spark.sql._
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import com.mongodb.spark.config.ReadConfig
-import com.pharbers.TmAggregation.TmAggPreset2Cal
+import com.mongodb.spark.config.{ReadConfig, WriteConfig}
+import com.pharbers.TmAggregation._
 import org.apache.spark.sql.functions._
 
 object BPMgoSpkProxyImpl {
@@ -44,7 +44,6 @@ object BPMgoSpkProxyImpl {
             "collection" -> "cal"))
 
         val cal_data = spark.read.mongo(cal_data_rc).filter(col("job_id") === job_id).drop(col("_id"))
-        cal_data.show(100)
         cal_data.write.parquet("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + job_id + "/input/" + "cal_data")
 //        cal_data.write.json("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + job_id + "/json/" + "cal_data")
 
@@ -54,10 +53,44 @@ object BPMgoSpkProxyImpl {
             "collection" -> "cal_comp"))
 
         val cal_comp = spark.read.mongo(cal_comp_rc).filter(col("job_id") === job_id).drop(col("_id"))
-        cal_comp.show(100)
         cal_comp.write.parquet("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + job_id + "/input/" + "cal_comp")
 //        cal_comp.write.json("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + job_id + "/json/" + "cal_comp")
 
         job_id
+    }
+
+    def loadDataFromSpark2Mgo(
+                                 jobId: String,
+                                 proposalId: String,
+                                 projectId: String,
+                                 periodId: String,
+                                 phase: Int = 0): Unit = {
+
+        val spark = SparkSession.builder().config(conf).getOrCreate()
+        val df_cal = spark.read.parquet("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + jobId + "/output/" + "cal_report")
+        df_cal.write
+            .format("com.mongodb.spark.sql.DefaultSource")
+            .option("spark.mongodb.output.uri", "mongodb://pharbers.com:5555/pharbers-ntm-client")
+            .option("collection", "cal_report")
+            .mode("append")
+            .save()
+
+        val df_comp = spark.read.parquet("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + jobId + "/output/" + "competitor")
+        df_comp.write
+            .format("com.mongodb.spark.sql.DefaultSource")
+            .option("spark.mongodb.output.uri", "mongodb://pharbers.com:5555/pharbers-ntm-client")
+            .option("collection", "cal_competitor")
+            .mode("append")
+            .save()
+
+        val df_summary = spark.read.parquet("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + jobId + "/output/" + "summary")
+        df_summary.write
+            .format("com.mongodb.spark.sql.DefaultSource")
+            .option("spark.mongodb.output.uri", "mongodb://pharbers.com:5555/pharbers-ntm-client")
+            .option("collection", "cal_FinalSummary")
+            .mode("append")
+            .save()
+
+        TmAggCal2Report.apply(jobId, proposalId, projectId, periodId, phase)
     }
 }
