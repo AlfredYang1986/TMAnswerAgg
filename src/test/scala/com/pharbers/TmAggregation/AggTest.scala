@@ -1,14 +1,19 @@
 package com.pharbers.TmAggregation
 
+import com.mongodb.casbah.Imports.{DBObject, ObjectId}
+import com.pharbers.TmAggregation.TmAggMongoHandler.AggCollEnum.periodsColl
 import org.scalatest.FunSuite
+import com.mongodb.casbah.Imports._
+import com.pharbers.TmAggregation.TmAggMongoHandler.AggCollEnum._
+import com.pharbers.TmAggregation.TmAggMongoHandler.AggMongoOpt.aggCollEnum2Coll
 
 class AggTest extends FunSuite {
 
     test("test for tm new agg") {
         println("start")
         println(TmAggPreset2Cal.apply("5d57ed3cab0bf2192d416afb",
-            "5d5b60f7c9f8a1002b9546a6",
-            "5d5cdd319d1ae902af0af0b7", 2))
+            "5d64e40cbfdb3821b0e313a5",
+            "5d64ee0dbfdb3821b0e31892", 1))
 //        println(TmAggPreset2Cal.apply("5d57ed3cab0bf2192d416afb",
 //            "5d57f2946db007183e2628e9",
 //            "5d57f2946db007183e2628ea", 0))
@@ -24,10 +29,10 @@ class AggTest extends FunSuite {
     test("test for tm new agg cal_report to report") {
         println("start")
         println(TmAggCal2Report.apply(
-            "0ff568e7-3e1a-48df-9ab0-d90f88130614",
+            "f95dd4ba-f597-4a82-a4ca-56930c652f1f",
             "5d57ed3cab0bf2192d416afb",
-            "5d5b60f7c9f8a1002b9546a6",
-            "5d5be64552942e22fdd09cbe", 0))
+            "5d68ffd9d0b16f03ef581e43",
+            "5d68ffdad0b16f03ef581e44", 2))
     }
 
     test("test for tm new agg cal_report to report1") {

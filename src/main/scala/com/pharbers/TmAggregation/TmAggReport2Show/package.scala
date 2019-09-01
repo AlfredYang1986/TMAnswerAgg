@@ -48,14 +48,14 @@ package object TmAggReport2Show {
     }
 
     def loadCurrentReport(project: DBObject, proposal: DBObject, phase: Int): List[DBObject] = {
-        val condi = ("phase" $lt phase) ++ ("proposalId" -> proposal._id.get.toString)
+        val condi = ("phase" $lt phase) ++ ("proposalId" -> proposal._id.get.toString) ++ ("projectId" -> "")
         val condi01 = ("phase" $lt phase) ++ ("projectId" -> project._id.get.toString)
         reportsColl.find($or(condi :: condi01 :: Nil)).toList
     }
 
 
     def loadCurrentPreset(project: DBObject, proposal: DBObject, phase: Int): List[DBObject] = {
-        val condi = ("phase" $lte phase) ++ ("proposalId" -> proposal._id.get.toString) ++ ("category" -> 2)
+        val condi = ("phase" $lte phase) ++ ("proposalId" -> proposal._id.get.toString) ++ ("category" -> 2) ++ ("projectId" -> "")
         val condi01 = ("phase" $lte phase) ++ ("projectId" -> project._id.get.toString) ++ ("category" -> 2)
         presetsColl.find($or(condi :: condi01 :: Nil)).toList
     }
