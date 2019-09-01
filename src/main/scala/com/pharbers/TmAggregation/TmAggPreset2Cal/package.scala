@@ -142,7 +142,7 @@ package object TmAggPreset2Cal {
             val condi : DBObject => Boolean =
                 if (phase > 0) {
                     (x: DBObject) =>
-                        x.get("projectId") != null &&
+                        x.get("projectId") != "" &&
                         x.get("hospital") == curHosp.get("_id") &&
                         x.get("product") == curProduct.get("_id") &&
                         x.get("category") == 8 && x.get("phase") == phase
@@ -153,7 +153,7 @@ package object TmAggPreset2Cal {
                         x.get("product") == curProduct.get("_id") &&
                         x.get("category") == 8 && x.get("phase") == phase
                 }
-
+			val a = presets.filter(condi(_))
 			presets.find(condi(_)) match {
 				case Some(curHPPreset) => {
 					builder += "status" -> (
