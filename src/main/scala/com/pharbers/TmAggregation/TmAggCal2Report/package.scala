@@ -266,7 +266,7 @@ package object TmAggCal2Report {
 
 			builder += "lastSales" -> queryNumSafe(res.get("sales"))
 			builder += "lastQuota" -> queryNumSafe(res.get("quota"))
-			builder += "lastAchievement" -> queryNumSafe(res.get("achievements"))
+			builder += "lastAchievement" -> queryNumSafe(res.get("quota_achv"))
 			builder += "lastShare" -> queryNumSafe(res.get("market_share"))
 			builder += "lastBudget" -> queryNumSafe(res.get("budget"))
 			builder += "initBudget" -> queryNumSafe(res.get("next_budget"))
