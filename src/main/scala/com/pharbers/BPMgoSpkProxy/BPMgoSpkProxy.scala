@@ -14,9 +14,6 @@ object BPMgoSpkProxyImpl {
     lazy val mongoHost = System.getProperty("MONGO_HOST")
     lazy val mongoPort = System.getProperty("MONGO_PORT")
     lazy val destDatabase = System.getProperty("MONGO_DEST")
-//    lazy val mongoHost = "pharbers.com"
-//    lazy val mongoPort = "5555"
-//    lazy val destDatabase = "pharbers-ntm-client"
 
     private val conf = new SparkConf()
         .set("spark.yarn.jars", yarnJars)
