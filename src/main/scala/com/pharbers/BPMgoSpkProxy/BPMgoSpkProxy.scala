@@ -7,13 +7,13 @@ import com.mongodb.spark.config.ReadConfig
 import com.pharbers.TmAggregation.TmAggPreset2Cal
 import org.apache.spark.sql.functions._
 
-class BPMgoSpkProxy {
+object BPMgoSpkProxyImpl {
 
     val yarnJars: String = "hdfs://spark.master:9000/jars/sparkJars"
 
-    val mongoHost = System.getProperty("MONGO_HOST")
-    val mongoPort = System.getProperty("MONGO_PORT")
-    val destDatabase = System.getProperty("MONGO_DEST")
+    lazy val mongoHost = System.getProperty("MONGO_HOST")
+    lazy val mongoPort = System.getProperty("MONGO_PORT")
+    lazy val destDatabase = System.getProperty("MONGO_DEST")
 
     private val conf = new SparkConf()
         .set("spark.yarn.jars", yarnJars)
@@ -29,7 +29,7 @@ class BPMgoSpkProxy {
                                  proposalId: String,
                                  projectId: String,
                                  periodId: String,
-                                 phase: Int = 0): String = {
+                                 phase: java.lang.Integer = 0): String = {
 
         val job_id = TmAggPreset2Cal.apply(proposalId, projectId, periodId, phase)
 
