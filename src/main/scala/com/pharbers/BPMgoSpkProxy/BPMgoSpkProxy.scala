@@ -14,6 +14,7 @@ object BPMgoSpkProxyImpl {
     lazy val mongoHost = System.getProperty("MONGO_HOST")
     lazy val mongoPort = System.getProperty("MONGO_PORT")
     lazy val destDatabase = System.getProperty("MONGO_DEST")
+	lazy val mongoUri = "mongodb://" + mongoHost + ":" + mongoPort + "/"
 
     private val conf = new SparkConf()
         .set("spark.yarn.jars", yarnJars)
@@ -36,7 +37,7 @@ object BPMgoSpkProxyImpl {
         val spark = SparkSession.builder().config(conf).getOrCreate()
 
         val cal_data_rc = ReadConfig(Map(
-            "uri" -> ("mongodb://" + mongoHost + ":" + mongoPort + "/"),
+            "uri" -> mongoUri,
             "database" -> destDatabase,
             "collection" -> "cal"))
 
@@ -67,7 +68,7 @@ object BPMgoSpkProxyImpl {
         val df_cal = spark.read.parquet("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + jobId + "/output/" + "cal_report")
         df_cal.write
             .format("com.mongodb.spark.sql.DefaultSource")
-            .option("spark.mongodb.output.uri", "mongodb://pharbers.com:5555/pharbers-ntm-client")
+            .option("spark.mongodb.output.uri", s"${mongoUri + destDatabase}")
             .option("collection", "cal_report")
             .mode("append")
             .save()
@@ -75,7 +76,7 @@ object BPMgoSpkProxyImpl {
         val df_comp = spark.read.parquet("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + jobId + "/output/" + "competitor")
         df_comp.write
             .format("com.mongodb.spark.sql.DefaultSource")
-            .option("spark.mongodb.output.uri", "mongodb://pharbers.com:5555/pharbers-ntm-client")
+            .option("spark.mongodb.output.uri", s"${mongoUri + destDatabase}")
             .option("collection", "cal_competitor")
             .mode("append")
             .save()
@@ -83,7 +84,7 @@ object BPMgoSpkProxyImpl {
         val df_summary = spark.read.parquet("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + jobId + "/output/" + "summary")
         df_summary.write
             .format("com.mongodb.spark.sql.DefaultSource")
-            .option("spark.mongodb.output.uri", "mongodb://pharbers.com:5555/pharbers-ntm-client")
+            .option("spark.mongodb.output.uri", s"${mongoUri + destDatabase}")
             .option("collection", "cal_FinalSummary")
             .mode("append")
             .save()
