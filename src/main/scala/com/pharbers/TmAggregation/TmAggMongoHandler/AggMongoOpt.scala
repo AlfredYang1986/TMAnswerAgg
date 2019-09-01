@@ -9,7 +9,7 @@ object AggMongoOpt {
     lazy val mongodbPort = "5555".toInt //System.getProperty("MONGO_PORT").toInt
     lazy val mongodbUsername = ""
     lazy val mongodbPassword = ""
-    lazy val ntmDBName = "pharber-ntm-client" //System.getProperty("MONGO_DEST")
+    lazy val ntmDBName = "pharbers-ntm-client" //System.getProperty("MONGO_DEST")
 
     lazy val db = MongoClient(mongodbHost, mongodbPort)(ntmDBName)
     var colls: Map[AggCollEnum, MongoCollection] = Map.empty
