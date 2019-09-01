@@ -1,4 +1,4 @@
-package com.pharbers.BPTMProxy;
+package com.pharbers.CallJMethod.BPTMProxy;
 
 import com.pharbers.BPMgoSpkProxy.BPMgoSpkProxyImpl;
 
@@ -6,7 +6,7 @@ public class TMProxy {
     public String BPTMUCBPreCal(String perposalid,
                                 String projectid,
                                 String periodid,
-                                int phase) {
-        return BPMgoSpkProxyImpl.loadDataFromMgo2Spark(perposalid, projectid, periodid, phase);
+                                Number phase) {
+        return BPMgoSpkProxyImpl.loadDataFromMgo2Spark(perposalid, projectid, periodid, phase.intValue());
     }
 }

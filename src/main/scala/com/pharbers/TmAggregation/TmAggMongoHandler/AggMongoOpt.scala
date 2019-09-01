@@ -5,11 +5,11 @@ import com.pharbers.TmAggregation.TmAggMongoHandler.AggCollEnum.AggCollEnum
 
 object AggMongoOpt {
 
-    lazy val mongodbHost = System.getProperty("MONGO_HOST")
-    lazy val mongodbPort = System.getProperty("MONGO_PORT").toInt
+    lazy val mongodbHost = "pharbers.com" //System.getProperty("MONGO_HOST")
+    lazy val mongodbPort = "5555".toInt //System.getProperty("MONGO_PORT").toInt
     lazy val mongodbUsername = ""
     lazy val mongodbPassword = ""
-    lazy val ntmDBName = System.getProperty("MONGO_DEST")
+    lazy val ntmDBName = "pharber-ntm-client" //System.getProperty("MONGO_DEST")
 
     lazy val db = MongoClient(mongodbHost, mongodbPort)(ntmDBName)
     var colls: Map[AggCollEnum, MongoCollection] = Map.empty
