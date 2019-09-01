@@ -139,11 +139,22 @@ package object TmAggPreset2Cal {
 			  *  - 上期计算结果病人人数
 			  *  - 初始总budget
 			  */
-			presets.find(x =>
-				x.get("hospital") == curHosp.get("_id") &&
-					x.get("product") == curProduct.get("_id") &&
-					x.get("category") == 8
-			) match {
+            val condi : DBObject => Boolean =
+                if (phase > 0) {
+                    (x: DBObject) =>
+                        x.get("projectId") != null &&
+                        x.get("hospital") == curHosp.get("_id") &&
+                        x.get("product") == curProduct.get("_id") &&
+                        x.get("category") == 8 && x.get("phase") == phase
+                } else {
+                    (x: DBObject) =>
+                        x.get("proposalId") != null &&
+                        x.get("hospital") == curHosp.get("_id") &&
+                        x.get("product") == curProduct.get("_id") &&
+                        x.get("category") == 8 && x.get("phase") == phase
+                }
+
+			presets.find(condi(_)) match {
 				case Some(curHPPreset) => {
 					builder += "status" -> (
 						if (curHPPreset.get("currentDurgEntrance").toString == "1") "已开发"

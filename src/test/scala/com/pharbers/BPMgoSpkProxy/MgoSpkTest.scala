@@ -6,9 +6,9 @@ class MgoSpkTest extends FunSuite {
     test("extract data from mongo 2 spark") {
         println("start")
 
-//        System.setProperty("MONGO_HOST", "pharbers.com")
-//        System.setProperty("MONGO_PORT", "5555")
-//        System.setProperty("MONGO_DEST", "pharbers-ntm-client")
+        System.setProperty("MONGO_HOST", "pharbers.com")
+        System.setProperty("MONGO_PORT", "5555")
+        System.setProperty("MONGO_DEST", "pharbers-ntm-client")
 
         val result = BPMgoSpkProxyImpl.loadDataFromMgo2Spark(
             "5d57ed3cab0bf2192d416afb",
