@@ -1,5 +1,7 @@
 package com.pharbers.TmAggregation
 
+import java.util.UUID
+
 import com.mongodb.casbah.Imports.{DBObject, ObjectId}
 import com.pharbers.TmAggregation.TmAggMongoHandler.AggCollEnum.periodsColl
 import org.scalatest.FunSuite
@@ -20,10 +22,18 @@ class AggTest extends FunSuite {
     }
 
     test("test for tm new agg report to show") {
+
+        System.setProperty("ES_HOST", "pharbers.com")
+        System.setProperty("ES_PORT", "9200")
+
         println("start")
-        println(TmAggReport2Show.apply("5d57ed3cab0bf2192d416afb",
-            "5d57f2946db007183e2628e9",
-            "5d57f2946db007183e2628ea", 0))
+        println(TmAggReport2Show.apply(
+            UUID.randomUUID().toString,
+            "5d57ed3cab0bf2192d416afb",
+            "5d6f742f153b3667418a2751",
+            "5d6f742f153b3667418a2752",
+            0
+        ))
     }
 
     test("test for tm new agg cal_report to report") {

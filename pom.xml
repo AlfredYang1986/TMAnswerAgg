@@ -26,6 +26,7 @@
                 <hadoop.version>2.7.2</hadoop.version>
                 <scalatest.version>3.0.1</scalatest.version>
                 <log4j.version>2.11.2</log4j.version>
+                <es.version>7.2.0</es.version>
             </properties>
 
             <repositories>
@@ -88,6 +89,12 @@
                     <groupId>com.databricks</groupId>
                     <artifactId>spark-avro_2.11</artifactId>
                     <version>4.0.0</version>
+                </dependency>
+                <!-- https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch-spark-20 -->
+                <dependency>
+                    <groupId>org.elasticsearch</groupId>
+                    <artifactId>elasticsearch-hadoop</artifactId>
+                    <version>${es.version}</version>
                 </dependency>
 
                 <!-- hadoop -->

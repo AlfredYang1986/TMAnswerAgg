@@ -3,17 +3,20 @@ package com.pharbers.TmAggregation
 import java.util.UUID
 
 import com.mongodb.casbah.Imports._
+import com.pharbers.BPMgoSpkProxy.BPEsSpkProxyImpl
 import com.pharbers.TmAggregation.TmAggMongoHandler.AggCollEnum._
 import com.pharbers.TmAggregation.TmAggMongoHandler.AggMongoOpt.aggCollEnum2Coll
 
+import scala.collection.mutable
+
 package object TmAggReport2Show {
-    def apply(
+    def apply(showId: String,
                  proposalId: String,
                  projectId: String,
                  periodId: String,
                  phase: Int = 0): String = {
 
-        val jobId = UUID.randomUUID().toString
+//        val jobId = UUID.randomUUID().toString
 
 //        val curPeriod = periodsColl.findOne(DBObject("_id" -> new ObjectId(periodId))).getOrElse(null)
         val curProposal = proposalsColl.findOne(DBObject("_id" -> new ObjectId(proposalId))).getOrElse(null)
@@ -31,33 +34,57 @@ package object TmAggReport2Show {
                     .map(x => DBObject("_id" -> x)))).toList
         )
 
-        val bulk = showReportColl.initializeOrderedBulkOperation
-        loadCurrentReport(curProject, curProposal, phase).foreach { x =>
-            val builder = MongoDBObject.newBuilder
-            builder += "job_id" -> jobId
-            bulk.insert(periodPresetReport(hosps, products, resources, jobId, x))
-        }
-        loadCurrentPreset(curProject, curProposal, phase).foreach { x =>
-            val builder = MongoDBObject.newBuilder
-            builder += "job_id" -> jobId
-            bulk.insert(periodAbilityReport(hosps, products, resources, jobId, x))
-        }
-        bulk.execute()
-        jobId
+//        val bulk = showReportColl.initializeOrderedBulkOperation
+//        loadCurrentReport(curProject, curProposal, phase).map { x =>
+//            val builder = MongoDBObject.newBuilder
+//            builder += "job_id" -> showId
+//            bulk.insert(periodPresetReport(hosps, products, resources, showId, x))
+//        }
+//        loadCurrentPreset(curProject, curProposal, phase).map { x =>
+//            val builder = MongoDBObject.newBuilder
+//            builder += "job_id" -> showId
+//            bulk.insert(periodAbilityReport(hosps, products, resources, showId, x))
+//        }
+//        bulk.execute()
 
+        val presetReports = loadCurrentReport(curProject, curProposal, phase).map { x =>
+            periodPresetReport(hosps, products, resources, showId, x)
+        }
+        val abilityReports = loadCurrentPreset(curProject, curProposal, phase).map { x =>
+            periodAbilityReport(hosps, products, resources, showId, x)
+        }
+
+        BPEsSpkProxyImpl.loadDataFromSpark2Es(showReportColl, presetReports.map(_.toSeq).map{ x =>
+            val tmp = collection.immutable.Map.newBuilder[String, Any]
+            x.foreach(y => tmp += (y._1 -> y._2))
+            tmp.result()
+        })
+        BPEsSpkProxyImpl.loadDataFromSpark2Es(showReportColl, abilityReports.map(_.toSeq).map{ x =>
+            val tmp = collection.immutable.Map.newBuilder[String, Any]
+            x.foreach(y => tmp += (y._1 -> y._2))
+            tmp.result()
+        })
+
+        showId
     }
 
     def loadCurrentReport(project: DBObject, proposal: DBObject, phase: Int): List[DBObject] = {
-        val condi = ("phase" $lt phase) ++ ("proposalId" -> proposal._id.get.toString) ++ ("projectId" -> "")
-        val condi01 = ("phase" $lt phase) ++ ("projectId" -> project._id.get.toString)
-        reportsColl.find($or(condi :: condi01 :: Nil)).toList
+//        val condi = ("phase" $lt phase) ++ ("proposalId" -> proposal._id.get.toString) ++ ("projectId" -> "")
+//        val condi01 = ("phase" $lt phase) ++ ("projectId" -> project._id.get.toString)
+//        reportsColl.find($or(condi :: condi01 :: Nil)).toList
+
+        val condi01 = ("phase" $eq phase) ++ ("projectId" -> project._id.get.toString)
+        reportsColl.find(condi01).toList
     }
 
 
     def loadCurrentPreset(project: DBObject, proposal: DBObject, phase: Int): List[DBObject] = {
-        val condi = ("phase" $lte phase) ++ ("proposalId" -> proposal._id.get.toString) ++ ("category" -> 2) ++ ("projectId" -> "")
-        val condi01 = ("phase" $lte phase) ++ ("projectId" -> project._id.get.toString) ++ ("category" -> 2)
-        presetsColl.find($or(condi :: condi01 :: Nil)).toList
+//        val condi = ("phase" $lte phase) ++ ("proposalId" -> proposal._id.get.toString) ++ ("category" -> 2) ++ ("projectId" -> "")
+//        val condi01 = ("phase" $lte phase) ++ ("projectId" -> project._id.get.toString) ++ ("category" -> 2)
+//        presetsColl.find($or(condi :: condi01 :: Nil)).toList
+
+        val condi01 = ("phase" $eq phase) ++ ("projectId" -> project._id.get.toString) ++ ("category" -> 2)
+        reportsColl.find(condi01).toList
     }
 
 
