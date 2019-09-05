@@ -29,8 +29,15 @@ object BPEsSpkProxyImpl {
                              projectId: String,
                              periodId: String,
                              phase: Int = 0): Unit = {
+        conf.set("es.nodes.wan.only", "true")
+        conf.set("es.pushdown", "true")
+        conf.set("es.index.auto.create", "true")
+        conf.set("es.nodes", esHost)
+        conf.set("es.port", esPort)
+
         val data = TmAggReport2Show.apply(proposalId, projectId, periodId, phase)
         val ss = SparkSession.builder().config(conf).getOrCreate()
+//        ss.sparkContext.addJar("hdfs://spark.master:9000/jars/context/elasticsearch-hadoop-7.2.0.jar")
         ss.sparkContext.makeRDD(data).saveToEs("tmrs_new")
 //        index: String, data: List[Map[String, Any]]
 //        conf.set("es.nodes.wan.only", "true")
