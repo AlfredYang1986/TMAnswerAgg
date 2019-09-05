@@ -14,7 +14,7 @@ package object TmAggReport2Show {
                  proposalId: String,
                  projectId: String,
                  periodId: String,
-                 phase: Int = 0): String = {
+                 phase: Int = 0): List[Map[String, Any]] = {
 
 //        val curPeriod = periodsColl.findOne(DBObject("_id" -> new ObjectId(periodId))).getOrElse(null)
         val curProposal = proposalsColl.findOne(DBObject("_id" -> new ObjectId(proposalId))).getOrElse(null)
@@ -46,24 +46,21 @@ package object TmAggReport2Show {
 //        bulk.execute()
 
         val presetReports = loadCurrentReport(curProject, curProposal, phase).map { x =>
-            periodPresetReport(projectId, hosps, products, resources, x)
+            val tmp = collection.immutable.Map.newBuilder[String, Any]
+            periodPresetReport(projectId, hosps, products, resources, x).toSeq.map{y =>
+                tmp += (y._1 -> y._2)
+            }
+            tmp.result()
         }
         val abilityReports = loadCurrentPreset(curProject, curProposal, phase).map { x =>
-            periodAbilityReport(projectId, hosps, products, resources, x)
+            val tmp = collection.immutable.Map.newBuilder[String, Any]
+            periodAbilityReport(projectId, hosps, products, resources, x).toSeq.map{y =>
+                tmp += (y._1 -> y._2)
+            }
+            tmp.result()
         }
 
-        BPEsSpkProxyImpl.loadDataFromSpark2Es(showReportColl, presetReports.map(_.toSeq).map{ x =>
-            val tmp = collection.immutable.Map.newBuilder[String, Any]
-            x.foreach(y => tmp += (y._1 -> y._2))
-            tmp.result()
-        })
-        BPEsSpkProxyImpl.loadDataFromSpark2Es(showReportColl, abilityReports.map(_.toSeq).map{ x =>
-            val tmp = collection.immutable.Map.newBuilder[String, Any]
-            x.foreach(y => tmp += (y._1 -> y._2))
-            tmp.result()
-        })
-
-        projectId
+        presetReports ::: abilityReports ::: Nil
     }
 
     def loadCurrentReport(project: DBObject, proposal: DBObject, phase: Int): List[DBObject] = {

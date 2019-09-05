@@ -1,4 +1,4 @@
-package com.pharbers
+package com.pharbers.TmAggregation
 
 import com.mongodb.casbah.Imports._
 import com.pharbers.BPMgoSpkProxy.BPEsSpkProxyImpl
