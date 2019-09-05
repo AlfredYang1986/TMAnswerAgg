@@ -6,6 +6,7 @@ import com.mongodb.casbah.Imports.{DBObject, ObjectId}
 import com.pharbers.TmAggregation.TmAggMongoHandler.AggCollEnum.periodsColl
 import org.scalatest.FunSuite
 import com.mongodb.casbah.Imports._
+import com.pharbers.TmAggPreset2Show
 import com.pharbers.TmAggregation.TmAggMongoHandler.AggCollEnum._
 import com.pharbers.TmAggregation.TmAggMongoHandler.AggMongoOpt.aggCollEnum2Coll
 
@@ -21,6 +22,21 @@ class AggTest extends FunSuite {
 //            "5d57f2946db007183e2628ea", 0))
     }
 
+    // 导入预设数据
+    test("test for tm new agg preset to show") {
+
+        System.setProperty("ES_HOST", "pharbers.com")
+        System.setProperty("ES_PORT", "9200")
+
+        println("start")
+        println(TmAggPreset2Show.apply(
+            "5d57ed3cab0bf2192d416afb",
+            "5d6f742f153b3667418a2751",
+            "5d6f742f153b3667418a2752",
+            0
+        ))
+    }
+
     test("test for tm new agg report to show") {
 
         System.setProperty("ES_HOST", "pharbers.com")
@@ -28,9 +44,8 @@ class AggTest extends FunSuite {
 
         println("start")
         println(TmAggReport2Show.apply(
-            UUID.randomUUID().toString,
             "5d57ed3cab0bf2192d416afb",
-            "5d6f742f153b3667418a2751",
+            "5d6cf7c39197e2002b8c6b96",
             "5d6f742f153b3667418a2752",
             0
         ))

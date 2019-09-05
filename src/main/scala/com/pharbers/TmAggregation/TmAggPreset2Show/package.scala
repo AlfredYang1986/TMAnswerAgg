@@ -1,105 +1,77 @@
-package com.pharbers.TmAggregation
-
-import java.util.UUID
+package com.pharbers
 
 import com.mongodb.casbah.Imports._
 import com.pharbers.BPMgoSpkProxy.BPEsSpkProxyImpl
 import com.pharbers.TmAggregation.TmAggMongoHandler.AggCollEnum._
 import com.pharbers.TmAggregation.TmAggMongoHandler.AggMongoOpt.aggCollEnum2Coll
 
-import scala.collection.mutable
+package object TmAggPreset2Show {
+    def apply(proposalId: String,
+              projectId: String = "",
+              periodId: String = "",
+              phase: Int = 0): String = {
 
-package object TmAggReport2Show {
-    def apply(
-                 proposalId: String,
-                 projectId: String,
-                 periodId: String,
-                 phase: Int = 0): String = {
-
-//        val curPeriod = periodsColl.findOne(DBObject("_id" -> new ObjectId(periodId))).getOrElse(null)
         val curProposal = proposalsColl.findOne(DBObject("_id" -> new ObjectId(proposalId))).getOrElse(null)
         val curProject = projectsColl.findOne(DBObject("_id" -> new ObjectId(projectId))).getOrElse(null)
 
         val (hosps, products, resources) = (
-            hospitalsColl.find(
-                $or(curProposal.getAs[List[ObjectId]]("targets").get
-                    .map(x => DBObject("_id" -> x)))).toList,
-            productsColl.find(
-                $or(curProposal.getAs[List[ObjectId]]("products").get
-                    .map(x => DBObject("_id" -> x)))).toList,
-            resourcesColl.find(
-                $or(curProposal.getAs[List[ObjectId]]("resources").get
-                    .map(x => DBObject("_id" -> x)))).toList
-        )
-
-//        val bulk = showReportColl.initializeOrderedBulkOperation
-//        loadCurrentReport(curProject, curProposal, phase).map { x =>
-//            val builder = MongoDBObject.newBuilder
-//            builder += "job_id" -> showId
-//            bulk.insert(periodPresetReport(hosps, products, resources, showId, x))
-//        }
-//        loadCurrentPreset(curProject, curProposal, phase).map { x =>
-//            val builder = MongoDBObject.newBuilder
-//            builder += "job_id" -> showId
-//            bulk.insert(periodAbilityReport(hosps, products, resources, showId, x))
-//        }
-//        bulk.execute()
+                hospitalsColl.find(
+                    $or(curProposal.getAs[List[ObjectId]]("targets").get
+                            .map(x => DBObject("_id" -> x)))).toList,
+                productsColl.find(
+                    $or(curProposal.getAs[List[ObjectId]]("products").get
+                            .map(x => DBObject("_id" -> x)))).toList,
+                resourcesColl.find(
+                    $or(curProposal.getAs[List[ObjectId]]("resources").get
+                            .map(x => DBObject("_id" -> x)))).toList
+                )
 
         val presetReports = loadCurrentReport(curProject, curProposal, phase).map { x =>
-            periodPresetReport(projectId, hosps, products, resources, x)
+            periodPresetReport(proposalId, hosps, products, resources, x)
         }
         val abilityReports = loadCurrentPreset(curProject, curProposal, phase).map { x =>
-            periodAbilityReport(projectId, hosps, products, resources, x)
+            periodAbilityReport(proposalId, hosps, products, resources, x)
         }
 
-        BPEsSpkProxyImpl.loadDataFromSpark2Es(showReportColl, presetReports.map(_.toSeq).map{ x =>
+        BPEsSpkProxyImpl.loadDataFromSpark2Es(showReportColl, presetReports.map(_.toSeq).map { x =>
             val tmp = collection.immutable.Map.newBuilder[String, Any]
             x.foreach(y => tmp += (y._1 -> y._2))
             tmp.result()
         })
-        BPEsSpkProxyImpl.loadDataFromSpark2Es(showReportColl, abilityReports.map(_.toSeq).map{ x =>
+        BPEsSpkProxyImpl.loadDataFromSpark2Es(showReportColl, abilityReports.map(_.toSeq).map { x =>
             val tmp = collection.immutable.Map.newBuilder[String, Any]
             x.foreach(y => tmp += (y._1 -> y._2))
             tmp.result()
         })
 
-        projectId
+        proposalId
     }
 
     def loadCurrentReport(project: DBObject, proposal: DBObject, phase: Int): List[DBObject] = {
-//        val condi = ("phase" $lt phase) ++ ("proposalId" -> proposal._id.get.toString) ++ ("projectId" -> "")
-//        val condi01 = ("phase" $lt phase) ++ ("projectId" -> project._id.get.toString)
-//        reportsColl.find($or(condi :: condi01 :: Nil)).toList
-
-        val condi01 = ("phase" $eq phase) ++ ("projectId" -> project._id.get.toString)
-        reportsColl.find(condi01).toList
+        val condi = ("phase" $lt phase) ++ ("proposalId" -> proposal._id.get.toString) ++ ("projectId" -> "")
+        reportsColl.find(condi).toList
     }
 
 
     def loadCurrentPreset(project: DBObject, proposal: DBObject, phase: Int): List[DBObject] = {
-//        val condi = ("phase" $lte phase) ++ ("proposalId" -> proposal._id.get.toString) ++ ("category" -> 2) ++ ("projectId" -> "")
-//        val condi01 = ("phase" $lte phase) ++ ("projectId" -> project._id.get.toString) ++ ("category" -> 2)
-//        presetsColl.find($or(condi :: condi01 :: Nil)).toList
-
-        val condi01 = ("phase" $eq phase) ++ ("projectId" -> project._id.get.toString) ++ ("category" -> 2)
-        reportsColl.find(condi01).toList
+        val condi = ("phase" $lte phase) ++ ("proposalId" -> proposal._id.get.toString) ++ ("category" -> 2) ++ ("projectId" -> "")
+        reportsColl.find(condi).toList
     }
-
 
     def queryNumSafe(x: AnyRef): Double = {
         if (x == null) 0.0
         else x.toString.toDouble
     }
 
-    def periodAbilityReport(projectId: String,
-                              hosps: List[DBObject],
-                              products: List[DBObject],
-                              resources: List[DBObject],
-                              preset: DBObject): DBObject = {
+    def periodAbilityReport(proposalId: String,
+                            hosps: List[DBObject],
+                            products: List[DBObject],
+                            resources: List[DBObject],
+                            preset: DBObject): DBObject = {
 
         val builder = MongoDBObject.newBuilder
 
-        builder += "project_id" -> projectId
+        builder += "proposal_id" -> proposalId
         builder += "category" -> "Ability"
         builder += "share" -> 0.0
 
@@ -109,7 +81,7 @@ package object TmAggReport2Show {
         builder += "potential" -> 0.0
         builder += "phase" -> preset.get("phase")
 
-        resources.find( x => x.get("_id") == preset.get("resource")) match {
+        resources.find(x => x.get("_id") == preset.get("resource")) match {
             case Some(r) => {
                 builder += "representative" -> r.get("name")
                 builder += "representative_time" -> 0.0
@@ -135,14 +107,14 @@ package object TmAggReport2Show {
         builder.result()
     }
 
-    def periodPresetReport(projectId: String,
-                              hosps: List[DBObject],
-                              products: List[DBObject],
-                              resources: List[DBObject],
-                              report: DBObject): DBObject = {
+    def periodPresetReport(proposalId: String,
+                           hosps: List[DBObject],
+                           products: List[DBObject],
+                           resources: List[DBObject],
+                           report: DBObject): DBObject = {
         val builder = MongoDBObject.newBuilder
 
-        builder += "project_id" -> projectId
+        builder += "proposal_id" -> proposalId
         builder += "category" -> report.get("category")
         builder += "share" -> queryNumSafe(report.get("share"))
 
@@ -176,7 +148,7 @@ package object TmAggReport2Show {
             }
         }
 
-        resources.find( x => x.get("_id") == report.get("resource")) match {
+        resources.find(x => x.get("_id") == report.get("resource")) match {
             case Some(r) => {
                 builder += "representative" -> r.get("name")
                 builder += "representative_time" -> 0.0
@@ -193,7 +165,7 @@ package object TmAggReport2Show {
         builder += "product_knowledge" -> 0.0
         builder += "behavior_efficiency" -> 0.0
 
-        products.find( x => x.get("_id") == report.get("product")) match {
+        products.find(x => x.get("_id") == report.get("product")) match {
             case Some(r) => {
                 builder += "product_area" -> r.get("treatmentArea")
                 builder += "status" -> (if (r.get("name") == "开拓来") "已开发" else "未开发")
