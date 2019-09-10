@@ -440,6 +440,14 @@ package object TmAggCal2Report {
 
         f += "newAccount" -> f.get("new_account")
 
+		// TM部分
+		f += "general_performance" -> f.get("general_performance")
+		f += "resource_assigns" -> f.get("resource_assigns")
+		f += "region_division" -> f.get("region_division")
+		f += "target_assigns" -> f.get("target_assigns")
+		f += "manage_time" -> f.get("manage_time")
+		f += "manage_team" -> f.get("manage_team")
+
 		finals.insert(f)
 		val lst = project.getAs[List[ObjectId]]("finals") match {
 			case Some(lst) => lst :+ f._id
