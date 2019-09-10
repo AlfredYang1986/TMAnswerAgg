@@ -46,21 +46,39 @@ package object TmAggReport2Show {
 //        bulk.execute()
 
         val presetReports = loadCurrentReport(curProject, curProposal, phase).map { x =>
-            val tmp = collection.immutable.Map.newBuilder[String, Any]
-            periodPresetReport(projectId, hosps, products, resources, x).toSeq.map{y =>
-                tmp += (y._1 -> y._2)
-            }
-            tmp.result()
+            periodPresetReport(projectId, hosps, products, resources, x)
         }
         val abilityReports = loadCurrentPreset(curProject, curProposal, phase).map { x =>
-            val tmp = collection.immutable.Map.newBuilder[String, Any]
-            periodAbilityReport(projectId, hosps, products, resources, x).toSeq.map{y =>
-                tmp += (y._1 -> y._2)
-            }
-            tmp.result()
+            periodAbilityReport(projectId, hosps, products, resources, x)
         }
 
-        presetReports ::: abilityReports ::: Nil
+        val result = presetReports ::: abilityReports ::: Nil
+
+        // 院外
+        val in = result.filter(p => List("会南市五零一医院", "省人民医院", "会东市医科大学附属第二医院").contains(p.get("hospital"))).map { x =>
+            val builder = MongoDBObject.newBuilder
+            builder ++= x
+            builder += "hospital_level" -> "院外"
+            builder += "sales" -> x.getAs[Double]("sales").get / 2
+            builder.result()
+        }
+
+        // 院内
+        val ino = result.filter(p => List("会南市五零一医院", "省人民医院", "会东市医科大学附属第二医院").contains(p.get("hospital"))).map { x =>
+            val builder = MongoDBObject.newBuilder
+            builder ++= x
+            builder += "sales" -> x.getAs[Double]("sales").get / 2
+            builder.result()
+        }
+
+        // 其他
+        val out = result.filter(p => !List("会南市五零一医院", "省人民医院", "会东市医科大学附属第二医院").contains(p.get("hospital")))
+
+        (in ::: ino ::: out).map { x =>
+            val tmp = collection.immutable.Map.newBuilder[String, Any]
+            x.toSeq.map (y => tmp += (y._1 -> y._2))
+            tmp.result()
+        }
     }
 
     def loadCurrentReport(project: DBObject, proposal: DBObject, phase: Int): List[DBObject] = {
@@ -79,7 +97,7 @@ package object TmAggReport2Show {
 //        presetsColl.find($or(condi :: condi01 :: Nil)).toList
 
         val condi01 = ("phase" $eq phase) ++ ("projectId" -> project._id.get.toString) ++ ("category" -> 2)
-        reportsColl.find(condi01).toList
+        presetsColl.find(condi01).toList
     }
 
 
