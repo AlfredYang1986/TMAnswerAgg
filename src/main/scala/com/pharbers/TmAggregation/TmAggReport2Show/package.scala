@@ -183,10 +183,12 @@ package object TmAggReport2Show {
         products.find(_.get("_id") == report.get("product")) match {
             case Some(p) => {
                 builder += "product" -> p.get("name")
+                builder += "product_type" -> p.get("productType")
                 builder += "life_cycle" -> p.get("lifeCycle")
             }
             case None => {
                 builder += "product" -> ""
+                builder += "product_type" -> 2
                 builder += "life_cycle" -> ""
             }
         }
