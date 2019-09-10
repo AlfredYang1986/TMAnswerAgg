@@ -114,7 +114,8 @@ package object TmAggCal2Report {
 
             builder += "projectId" -> project._id.get.toString
             builder += "periodId" -> period._id.get.toString
-            builder += "proposalId" -> proposal._id.get.toString
+            builder += "proposalId" -> ""
+//			builder += "proposalId" -> proposal._id.get.toString
 
             bulk.insert(builder.result)
         }
