@@ -112,7 +112,7 @@ package object TmAggCal2Report {
             builder += "share" -> 0.0
             builder += "achievements" -> items.map(x => queryNumSafe(x.get("achievements"))).sum
 			builder += "patientNum" -> items.map(x => queryNumSafe(x.get("patient"))).sum
-			builder += "drugEntrance" -> queryNumSafe(items.head.get("status"))
+			builder += "drugEntrance" -> items.head.get("status")
 
             builder += "projectId" -> project._id.get.toString
             builder += "periodId" -> period._id.get.toString
