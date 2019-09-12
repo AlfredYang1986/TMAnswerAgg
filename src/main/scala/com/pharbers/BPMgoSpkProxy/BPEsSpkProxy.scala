@@ -40,8 +40,8 @@ object BPEsSpkProxyImpl {
 
     }
 
-    def deleteEsByProjectId(projectId: String): Unit = {
-        val url = s"http://$esHost:$esPort/$esIndex/_delete_by_query?q=project_id.keyword:$projectId";
+    def deleteEsByCond(projectId: String, phase: Int): Unit = {
+        val url = s"http://$esHost:$esPort/$esIndex/_delete_by_query?q=project_id.keyword:$projectId AND phase.keyword:$phase"
         HttpClients.createDefault().execute(new HttpPost(url))
     }
 
@@ -55,7 +55,7 @@ object BPEsSpkProxyImpl {
         conf.set("es.nodes", esHost)
         conf.set("es.port", esPort)
 
-        deleteEsByProjectId(projectId)
+        deleteEsByCond(projectId, phase)
         val data = TmAggReport2Show.apply(proposalId, projectId, periodId, phase)
         val ss = SparkSession.builder().config(conf).getOrCreate()
         ss.sparkContext.makeRDD(data).saveToEs(esIndex)
