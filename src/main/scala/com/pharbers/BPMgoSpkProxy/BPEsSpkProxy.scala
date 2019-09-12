@@ -4,12 +4,15 @@ import com.pharbers.TmAggregation.TmAggReport2Show
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SparkSession
 import org.elasticsearch.spark._
+import org.apache.http.client.methods.HttpPost
+import org.apache.http.impl.client.{DefaultHttpClient, HttpClients}
 
 object BPEsSpkProxyImpl {
     val yarnJars: String = "hdfs://spark.master:9000/jars/sparkJars"
 
     lazy val esHost: String = System.getProperty("ES_HOST")
     lazy val esPort: String = System.getProperty("ES_PORT")
+    lazy val esIndex: String = "tmrs_new"
 
     private val conf = new SparkConf()
             .set("spark.yarn.jars", yarnJars)
@@ -37,6 +40,11 @@ object BPEsSpkProxyImpl {
 
     }
 
+    def deleteEsByProjectId(projectId: String): Unit = {
+        val url = s"http://$esHost:$esPort/$esIndex/_delete_by_query?q=project_id.keyword:$projectId";
+        HttpClients.createDefault().execute(new HttpPost(url))
+    }
+
     def loadDataFromSpark2Es(proposalId: String,
                              projectId: String,
                              periodId: String,
@@ -47,8 +55,9 @@ object BPEsSpkProxyImpl {
         conf.set("es.nodes", esHost)
         conf.set("es.port", esPort)
 
+        deleteEsByProjectId(projectId)
         val data = TmAggReport2Show.apply(proposalId, projectId, periodId, phase)
         val ss = SparkSession.builder().config(conf).getOrCreate()
-        ss.sparkContext.makeRDD(data).saveToEs("tmrs_new")
+        ss.sparkContext.makeRDD(data).saveToEs(esIndex)
     }
 }

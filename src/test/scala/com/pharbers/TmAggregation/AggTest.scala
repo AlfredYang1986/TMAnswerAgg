@@ -19,7 +19,7 @@ class AggTest extends FunSuite {
 
         println("start")
         println(TmAggPreset2Show.apply(
-            "5d7718b661ca7408f172c827", //5d7718b661ca7408f172c827 -> UCB // 5d7718b861ca7408f172c8c8 -> TM
+            "5d79c5761c3bac3244ab93c6", //5d79c5761c3bac3244ab93c6 -> UCB // 5d79c5751c3bac3244ab9325 -> TM
             "5d6f742f153b3667418a2751",
             "5d6f742f153b3667418a2752",
             0
