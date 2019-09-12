@@ -18,12 +18,12 @@ class AggTest extends FunSuite {
         System.setProperty("ES_PORT", "9200")
 
         println("start")
-//        println(TmAggPreset2Show.apply(
-//            "5d57ed3cab0bf2192d416afb",
-//            "5d6f742f153b3667418a2751",
-//            "5d6f742f153b3667418a2752",
-//            0
-//        ))
+        println(TmAggPreset2Show.apply(
+            "5d7718b661ca7408f172c827", //5d7718b661ca7408f172c827 -> UCB // 5d7718b861ca7408f172c8c8 -> TM
+            "5d6f742f153b3667418a2751",
+            "5d6f742f153b3667418a2752",
+            0
+        ))
     }
 
     test("test for tm new agg report to show") {
