@@ -82,21 +82,13 @@ package object TmAggReport2Show {
     }
 
     def loadCurrentReport(project: DBObject, proposal: DBObject, phase: Int): List[DBObject] = {
-//        val condi = ("phase" $lt phase) ++ ("proposalId" -> proposal._id.get.toString) ++ ("projectId" -> "")
-//        val condi01 = ("phase" $lt phase) ++ ("projectId" -> project._id.get.toString)
-//        reportsColl.find($or(condi :: condi01 :: Nil)).toList
-
         val condi01 = ("phase" $eq phase) ++ ("projectId" -> project._id.get.toString)
         reportsColl.find(condi01).toList
     }
 
 
     def loadCurrentPreset(project: DBObject, proposal: DBObject, phase: Int): List[DBObject] = {
-//        val condi = ("phase" $lte phase) ++ ("proposalId" -> proposal._id.get.toString) ++ ("category" -> 2) ++ ("projectId" -> "")
-//        val condi01 = ("phase" $lte phase) ++ ("projectId" -> project._id.get.toString) ++ ("category" -> 2)
-//        presetsColl.find($or(condi :: condi01 :: Nil)).toList
-
-        val condi01 = ("phase" $eq phase) ++ ("projectId" -> project._id.get.toString) ++ ("category" -> 2)
+       val condi01 = ("phase" $eq phase) ++ ("projectId" -> project._id.get.toString) ++ ("category" -> 2)
         presetsColl.find(condi01).toList
     }
 
@@ -151,10 +143,10 @@ package object TmAggReport2Show {
     }
 
     def periodPresetReport(projectId: String,
-                              hosps: List[DBObject],
-                              products: List[DBObject],
-                              resources: List[DBObject],
-                              report: DBObject): DBObject = {
+                           hosps: List[DBObject],
+                           products: List[DBObject],
+                           resources: List[DBObject],
+                           report: DBObject): DBObject = {
         val builder = MongoDBObject.newBuilder
 
         builder += "project_id" -> projectId
@@ -166,6 +158,8 @@ package object TmAggReport2Show {
         builder += "budget" -> 0.0
         builder += "potential" -> queryNumSafe(report.get("potential"))
         builder += "phase" -> report.get("phase")
+        builder += "status" -> report.get("drugEntrance")
+        builder += "currentPatientNum" -> report.get("patientNum")
 
         hosps.find(_.get("_id") == report.get("hospital")) match {
             case Some(h) => {
@@ -213,11 +207,9 @@ package object TmAggReport2Show {
         products.find( x => x.get("_id") == report.get("product")) match {
             case Some(r) => {
                 builder += "product_area" -> r.get("treatmentArea")
-                builder += "status" -> (if (r.get("name") == "开拓来") "已开发" else "未开发")
             }
             case None => {
                 builder += "product_area" -> ""
-                builder += "status" -> ""
             }
         }
 

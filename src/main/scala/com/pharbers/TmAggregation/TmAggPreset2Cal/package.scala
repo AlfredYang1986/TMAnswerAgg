@@ -157,7 +157,7 @@ package object TmAggPreset2Cal {
                         x.get("product") == curProduct.get("_id") &&
                         x.get("category") == 8 && x.get("phase") == phase
                 }
-			val a = presets.filter(condi(_))
+//			val a = presets.filter(condi(_))
 			presets.find(condi(_)) match {
 				case Some(curHPPreset) => {
 					builder += "status" -> (

@@ -54,7 +54,7 @@ package object TmAggPreset2Show {
 
     def loadCurrentPreset(project: DBObject, proposal: DBObject, phase: Int): List[DBObject] = {
         val condi = ("phase" $lte phase) ++ ("proposalId" -> proposal._id.get.toString) ++ ("category" -> 2) ++ ("projectId" -> "")
-        reportsColl.find(condi).toList
+        presetsColl.find(condi).toList
     }
 
     def queryNumSafe(x: AnyRef): Double = {
@@ -122,6 +122,8 @@ package object TmAggPreset2Show {
         builder += "budget" -> 0.0
         builder += "potential" -> queryNumSafe(report.get("potential"))
         builder += "phase" -> report.get("phase")
+        builder += "status" -> report.get("drugEntrance")
+        builder += "currentPatientNum" -> report.get("patientNum")
 
         hosps.find(_.get("_id") == report.get("hospital")) match {
             case Some(h) => {
