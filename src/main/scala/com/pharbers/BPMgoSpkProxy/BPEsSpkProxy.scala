@@ -1,10 +1,12 @@
 package com.pharbers.BPMgoSpkProxy
 
 import com.pharbers.TmAggregation.TmAggReport2Show
+import org.apache.http.HttpHeaders
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SparkSession
 import org.elasticsearch.spark._
 import org.apache.http.client.methods.HttpPost
+import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.{DefaultHttpClient, HttpClients}
 
 object BPEsSpkProxyImpl {
@@ -41,8 +43,29 @@ object BPEsSpkProxyImpl {
     }
 
     def deleteEsByCond(projectId: String, phase: Int): Unit = {
-        val url = s"http://$esHost:$esPort/$esIndex/_delete_by_query?q=project_id.keyword:$projectId AND phase.keyword:$phase"
-        HttpClients.createDefault().execute(new HttpPost(url))
+        val url = s"""http://$esHost:$esPort/$esIndex/_delete_by_query"""
+        val post = new HttpPost(url)
+        post.addHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+        post.setEntity(new StringEntity(
+            s"""{
+               |	"query": {
+               |		"bool": {
+               |			"must": [{
+               |					"match": {
+               |						"project_id.keyword": "$projectId"
+               |					}
+               |				},
+               |				{
+               |					"match": {
+               |						"phase": $phase
+               |					}
+               |				}
+               |			]
+               |		}
+               |	}
+               |}""".stripMargin
+        ))
+        HttpClients.createDefault().execute(post)
     }
 
     def loadDataFromSpark2Es(proposalId: String,
