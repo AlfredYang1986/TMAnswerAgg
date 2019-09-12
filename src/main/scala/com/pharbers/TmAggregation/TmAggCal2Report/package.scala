@@ -34,6 +34,10 @@ package object TmAggCal2Report {
 					.map(x => DBObject("_id" -> x)))).toList
 		)
 
+		// remove old result in the presets and report
+        presetsColl.remove(DBObject("project_id" -> projectId, "phase" -> phase))
+        reportsColl.remove(DBObject("project_id" -> projectId, "phase" -> phase))
+
 		val competitors = calCompetitorColl.find(
 			$and("job_id" -> jobId, "period_id" -> periodId, "project_id" -> projectId)).toList
 
@@ -112,7 +116,7 @@ package object TmAggCal2Report {
             builder += "share" -> 0.0
             builder += "achievements" -> items.map(x => queryNumSafe(x.get("achievements"))).sum
 			builder += "patientNum" -> items.map(x => queryNumSafe(x.get("patient"))).sum
-			builder += "drugEntrance" -> queryNumSafe(items.head.get("status"))
+			builder += "drugEntrance" -> items.head.get("status")
 
             builder += "projectId" -> project._id.get.toString
             builder += "periodId" -> period._id.get.toString
