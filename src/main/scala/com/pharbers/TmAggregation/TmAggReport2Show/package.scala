@@ -54,34 +54,42 @@ package object TmAggReport2Show {
 
         val result = presetReports ::: abilityReports ::: Nil
 
-        // 院外
-        val in = result.filter(p => p.getAs[String]("category").get == "Hospital" && List("会南市五零一医院", "省人民医院", "会东市医科大学附属第二医院").contains(p.get("hospital"))).map { x =>
-            val builder = MongoDBObject.newBuilder
-            builder ++= x
-            builder += "hospital_level" -> "院外"
-            builder += "sales" -> queryNumSafe(x.get("sales")) / 2
-            builder += "quota" -> queryNumSafe(x.get("salesQuota")) / 2
-            builder += "currentPatientNum" -> queryNumSafe(x.get("patientNum")) / 2
-            builder.result()
-        }
+        if ( phase > 0 ) {
+            // 院外
+            val in = result.filter(p => p.getAs[String]("category").get == "Hospital" && List("会南市五零一医院", "省人民医院", "会东市医科大学附属第二医院").contains(p.get("hospital"))).map { x =>
+                val builder = MongoDBObject.newBuilder
+                builder ++= x
+                builder += "hospital_level" -> "院外"
+                builder += "sales" -> queryNumSafe(x.get("sales")) / 2
+                builder += "quota" -> queryNumSafe(x.get("salesQuota")) / 2
+                builder += "currentPatientNum" -> queryNumSafe(x.get("patientNum")) / 2
+                builder.result()
+            }
 
-        // 院内
-        val ino = result.filter(p => p.getAs[String]("category").get == "Hospital" && List("会南市五零一医院", "省人民医院", "会东市医科大学附属第二医院").contains(p.get("hospital"))).map { x =>
-            val builder = MongoDBObject.newBuilder
-            builder ++= x
-            builder += "sales" -> queryNumSafe(x.get("sales")) / 2
-            builder += "quota" -> queryNumSafe(x.get("salesQuota")) / 2
-            builder += "currentPatientNum" -> queryNumSafe(x.get("patientNum")) / 2
-            builder.result()
-        }
+            // 院内
+            val ino = result.filter(p => p.getAs[String]("category").get == "Hospital" && List("会南市五零一医院", "省人民医院", "会东市医科大学附属第二医院").contains(p.get("hospital"))).map { x =>
+                val builder = MongoDBObject.newBuilder
+                builder ++= x
+                builder += "sales" -> queryNumSafe(x.get("sales")) / 2
+                builder += "quota" -> queryNumSafe(x.get("salesQuota")) / 2
+                builder += "currentPatientNum" -> queryNumSafe(x.get("patientNum")) / 2
+                builder.result()
+            }
 
-        // 其他
-        val out = result.filter(p => !(p.getAs[String]("category").get == "Hospital" && List("会南市五零一医院", "省人民医院", "会东市医科大学附属第二医院").contains(p.get("hospital"))))
+            // 其他
+            val out = result.filter(p => !(p.getAs[String]("category").get == "Hospital" && List("会南市五零一医院", "省人民医院", "会东市医科大学附属第二医院").contains(p.get("hospital"))))
 
-        (in ::: ino ::: out).map { x =>
-            val tmp = collection.immutable.Map.newBuilder[String, Any]
-            x.toSeq.map (y => tmp += (y._1 -> y._2))
-            tmp.result()
+            (in ::: ino ::: out).map { x =>
+                val tmp = collection.immutable.Map.newBuilder[String, Any]
+                x.toSeq.map (y => tmp += (y._1 -> y._2))
+                tmp.result()
+            }
+        } else {
+           result.map { x =>
+               val tmp = collection.immutable.Map.newBuilder[String, Any]
+               x.toSeq.map (y => tmp += (y._1 -> y._2))
+               tmp.result()
+           }
         }
     }
 
