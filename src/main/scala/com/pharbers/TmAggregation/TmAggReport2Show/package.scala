@@ -55,8 +55,14 @@ package object TmAggReport2Show {
         val result = presetReports ::: abilityReports ::: Nil
 
         if ( phase > 0 ) {
+            // 拆分规则
+            val splitRules: DBObject => Boolean = db =>
+                db.getAs[String]("product").get == "开拓来" &&
+                        db.getAs[String]("category").get == "Hospital" &&
+                        List("会南市五零一医院", "省人民医院", "会东市医科大学附属第二医院").contains(db.get("hospital"))
+
             // 院外
-            val in = result.filter(p => p.getAs[String]("category").get == "Hospital" && List("会南市五零一医院", "省人民医院", "会东市医科大学附属第二医院").contains(p.get("hospital"))).map { x =>
+            val in = result.filter(splitRules).map { x =>
                 val builder = MongoDBObject.newBuilder
                 builder ++= x
                 builder += "hospital_level" -> "院外"
@@ -67,7 +73,7 @@ package object TmAggReport2Show {
             }
 
             // 院内
-            val ino = result.filter(p => p.getAs[String]("category").get == "Hospital" && List("会南市五零一医院", "省人民医院", "会东市医科大学附属第二医院").contains(p.get("hospital"))).map { x =>
+            val ino = result.filter(splitRules).map { x =>
                 val builder = MongoDBObject.newBuilder
                 builder ++= x
                 builder += "sales" -> queryNumSafe(x.get("sales")) / 2
@@ -77,7 +83,7 @@ package object TmAggReport2Show {
             }
 
             // 其他
-            val out = result.filter(p => !(p.getAs[String]("category").get == "Hospital" && List("会南市五零一医院", "省人民医院", "会东市医科大学附属第二医院").contains(p.get("hospital"))))
+            val out = result.filter(!splitRules(_))
 
             (in ::: ino ::: out).map { x =>
                 val tmp = collection.immutable.Map.newBuilder[String, Any]
