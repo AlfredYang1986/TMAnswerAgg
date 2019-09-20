@@ -46,6 +46,7 @@ package object TmAggCal2Report {
 		aggResource(jobResult, hosps, products, resources, curProject, curPeriod, curProposal, phase)
 		aggProduct(jobResult, hosps, products, resources, curProject, curPeriod, curProposal, phase)
 		aggSales(jobResult, hosps, products, resources, curProject, curPeriod, curProposal, phase)
+        aggComp(hosps, products, resources, curProject, curPeriod, phase)
 
 		aggPreset(jobResult, hosps, products, competitors, resources, curProject, curPeriod, phase) // category 8
 		aggResourcePreset(jobResult, hosps, products, resources, curProject, curPeriod, phase) // category 2
@@ -68,6 +69,47 @@ package object TmAggCal2Report {
 		queryStringSafe(x.get("hospital")) + "##" +
 			queryStringSafe(x.get("product")) + "##" +
 			queryStringSafe(x.get("representative"))
+
+	def aggComp(
+                   hospitals: List[DBObject],
+                   products: List[DBObject],
+                   resources: List[DBObject],
+                   project: DBObject,
+                   period: DBObject,
+                   phase: Int) = {
+
+        val bulk = reportsColl.initializeOrderedBulkOperation
+
+        calCompetitorColl.find(DBObject("project_id" -> project._id.get.toString, "period_id" -> period._id.get.toString)).foreach { item =>
+            val builder = MongoDBObject.newBuilder
+
+            builder += "phase" -> phase
+            builder += "category" -> "Product"
+            builder += "hospital" -> null
+            builder += "product" -> products.find(_.get("name") == item.get("product")).get._id
+            builder += "resource" -> null
+            builder += "region" -> ""
+
+            builder += "sales" -> queryNumSafe(item.get("sales"))
+            builder += "salesContri" -> 0.0
+            builder += "salesGrowthYOY" -> 0.0
+            builder += "salesGrowthMOM" -> 0.0
+            builder += "salesQuota" -> 0.0
+            builder += "quotaGrowthMOM" -> 0.0
+            builder += "share" -> queryNumSafe(item.get("market_share"))
+            builder += "achievements" -> 0.0
+			builder += "patientNum" -> 0.0
+			builder += "drugEntrance" -> 0.0
+
+            builder += "projectId" -> project._id.get.toString
+            builder += "periodId" -> period._id.get.toString
+            builder += "proposalId" -> ""
+
+            bulk.insert(builder.result())
+        }
+
+        bulk.execute()
+    }
 
 	def aggReport(
 		             results: List[DBObject],
