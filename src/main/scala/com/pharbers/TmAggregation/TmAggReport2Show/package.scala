@@ -11,10 +11,10 @@ import scala.collection.mutable
 
 package object TmAggReport2Show {
     def apply(
-                 proposalId: String,
-                 projectId: String,
-                 periodId: String,
-                 phase: Int = 0): List[Map[String, Any]] = {
+                proposalId: String,
+                projectId: String,
+                periodId: String,
+                phase: Int = 0): List[Map[String, Any]] = {
 
 //        val curPeriod = periodsColl.findOne(DBObject("_id" -> new ObjectId(periodId))).getOrElse(null)
         val curProposal = proposalsColl.findOne(DBObject("_id" -> new ObjectId(proposalId))).getOrElse(null)

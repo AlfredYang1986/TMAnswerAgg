@@ -101,6 +101,7 @@ package object TmAggCal2Report {
             builder += "salesQuota" -> 0.0
             builder += "quotaGrowthMOM" -> 0.0
             builder += "share" -> queryNumSafe(item.get("market_share"))
+			builder += "potential" -> queryNumSafe(item.get("potential"))
             builder += "achievements" -> 0.0
 			builder += "patientNum" -> 0.0
 			builder += "drugEntrance" -> 0.0
@@ -159,7 +160,8 @@ package object TmAggCal2Report {
             builder += "salesGrowthMOM" -> 0.0
             builder += "salesQuota" -> items.map(x => queryNumSafe(x.get("quota"))).sum
             builder += "quotaGrowthMOM" -> 0.0
-            builder += "share" -> 0.0
+            builder += "share" -> 0.0 //queryNumSafe(comp.get("market_share"))
+			builder += "potential" -> items.map(x => queryNumSafe(x.get("potential"))).sum
             builder += "achievements" -> items.map(x => queryNumSafe(x.get("achievements"))).sum
 			builder += "patientNum" -> items.map(x => queryNumSafe(x.get("patient"))).sum
 			builder += "drugEntrance" -> items.head.get("status")
