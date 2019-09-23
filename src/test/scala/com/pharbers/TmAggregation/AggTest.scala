@@ -43,10 +43,10 @@ class AggTest extends FunSuite {
     test("test for tm new agg cal_report to report") {
         println("start")
         println(TmAggCal2Report.apply(
-            "cce5bcb6-68f0-45fe-be7c-3e7d42fc4976",
+            "156e8a81-3d97-48ac-8891-2d86c011680d", // "decd57f5-5595-4f0b-a98e-0ba5be49e462",
             "5d81fe2d8f807ab15afea035",
-            "5d83a72d29dc6c002bdc8a16",
-            "5d83a72d29dc6c002bdc8a17", 0))
+            "5d882818cd6d65002bf8ada4",
+            "5d882b3bcd6d65002bf8ae07", 1))
     }
 
     test("test for tm new agg cal_report to report1") {

@@ -46,7 +46,7 @@ package object TmAggCal2Report {
 		aggResource(jobResult, hosps, products, resources, curProject, curPeriod, curProposal, phase)
 		aggProduct(jobResult, hosps, products, resources, curProject, curPeriod, curProposal, phase)
 		aggSales(jobResult, hosps, products, resources, curProject, curPeriod, curProposal, phase)
-        aggComp(hosps, products, resources, curProject, curPeriod, phase)
+        aggComp(jobId, hosps, products, resources, curProject, curPeriod, phase)
 
 		aggPreset(jobResult, hosps, products, competitors, resources, curProject, curPeriod, phase) // category 8
 		aggResourcePreset(jobResult, hosps, products, resources, curProject, curPeriod, phase) // category 2
@@ -71,6 +71,7 @@ package object TmAggCal2Report {
 			queryStringSafe(x.get("representative"))
 
 	def aggComp(
+				   jobId: String,
                    hospitals: List[DBObject],
                    products: List[DBObject],
                    resources: List[DBObject],
@@ -80,7 +81,10 @@ package object TmAggCal2Report {
 
         val bulk = reportsColl.initializeOrderedBulkOperation
 
-        calCompetitorColl.find(DBObject("project_id" -> project._id.get.toString, "period_id" -> period._id.get.toString)).foreach { item =>
+        calCompetitorColl.find(DBObject(
+			"job_id" -> jobId,
+			"project_id" -> project._id.get.toString,
+			"period_id" -> period._id.get.toString)).foreach { item =>
             val builder = MongoDBObject.newBuilder
 
             builder += "phase" -> phase
