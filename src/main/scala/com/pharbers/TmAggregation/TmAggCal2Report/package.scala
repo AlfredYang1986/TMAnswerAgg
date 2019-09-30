@@ -35,8 +35,8 @@ package object TmAggCal2Report {
 		)
 
 		// remove old result in the presets and report
-        presetsColl.remove(DBObject("project_id" -> projectId, "phase" -> phase))
-        reportsColl.remove(DBObject("project_id" -> projectId, "phase" -> phase))
+        presetsColl.remove(DBObject("projectId" -> projectId, "phase" -> (phase + 1)))
+        reportsColl.remove(DBObject("projectId" -> projectId, "phase" -> phase))
 
 		val competitors = calCompetitorColl.find(
 			$and("job_id" -> jobId, "period_id" -> periodId, "project_id" -> projectId)).toList
