@@ -6,9 +6,12 @@ class AggTest extends FunSuite {
 
     test("test for tm new agg") {
         println("start")
-        println(TmAggPreset2Cal.apply("5d7718b861ca7408f172c8c8",
-            "5d771b10e893ec02fe39b3f7",
-            "5d771c3ee893ec02fe39b45a", 1))
+        println(TmAggPreset2Cal.apply("5d57ed3cab0bf2192d416afb",
+            "5d6e3772309d6c352ee6b4ec",
+            "5d6e385e309d6c352ee6b54f", 1))
+//        println(TmAggPreset2Cal.apply("5d57ed3cab0bf2192d416afb",
+//            "5d57f2946db007183e2628e9",
+//            "5d57f2946db007183e2628ea", 0))
     }
 
     // 导入预设数据
