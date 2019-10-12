@@ -139,11 +139,11 @@ package object TmAggReport2Show {
                 builder += "representative" -> r.get("name")
                 builder += "representative_time" -> 0.0
 
-                builder += "work_motivation" -> queryNumSafe(preset.get("workMotivation"))
-                builder += "territory_management_ability" -> queryNumSafe(preset.get("territoryManagementAbility"))
-                builder += "sales_skills" -> queryNumSafe(preset.get("salesSkills"))
-                builder += "product_knowledge" -> queryNumSafe(preset.get("productKnowledge"))
-                builder += "behavior_efficiency" -> queryNumSafe(preset.get("behaviorEfficiency"))
+                builder += "work_motivation" -> queryNumSafe(preset.get("currentWorkMotivation"))
+                builder += "territory_management_ability" -> queryNumSafe(preset.get("currentTMA"))
+                builder += "sales_skills" -> queryNumSafe(preset.get("currentSalesSkills"))
+                builder += "product_knowledge" -> queryNumSafe(preset.get("currentProductKnowledge"))
+                builder += "behavior_efficiency" -> queryNumSafe(preset.get("currentBehaviorEfficiency"))
             }
             case None => {
                 builder += "representative" -> ""
