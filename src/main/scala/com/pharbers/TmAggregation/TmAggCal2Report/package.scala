@@ -494,14 +494,15 @@ package object TmAggCal2Report {
 		f -= "return_on_investment"
 
         f += "newAccount" -> f.get("new_account")
+		f -= "new_account"
 
 		// TM部分
-		f += "general_performance" -> f.get("general_performance")
-		f += "resource_assigns" -> f.get("resource_assigns")
-		f += "region_division" -> f.get("region_division")
-		f += "target_assigns" -> f.get("target_assigns")
-		f += "manage_time" -> f.get("manage_time")
-		f += "manage_team" -> f.get("manage_team")
+		f += "generalPerformance" -> f.get("general_performance")
+		f += "resourceAssigns" -> f.get("resource_assigns")
+		f += "regionDivision" -> f.get("region_division")
+		f += "targetAssigns" -> f.get("target_assigns")
+		f += "manageTime" -> f.get("manage_time")
+		f += "manageTeam" -> f.get("manage_team")
 
 		finals.insert(f)
 		val lst = project.getAs[List[ObjectId]]("finals") match {
