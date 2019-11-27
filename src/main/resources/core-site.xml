@@ -17,12 +17,12 @@
 <!-- Put site-specific property overrides in this file. -->
 
 <configuration>
-    <property>  
-        <name>fs.defaultFS</name>  
-        <value>hdfs://spark.master:9000</value>
-    </property>  
-    <property>  
-        <name>hadoop.tmp.dir</name>  
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://spark.master:8020</value>
+    </property>
+    <property>
+        <name>hadoop.tmp.dir</name>
         <value>/home/spark/data/tmp</value>
     </property>
 </configuration>

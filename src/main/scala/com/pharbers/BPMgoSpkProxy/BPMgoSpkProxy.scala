@@ -9,7 +9,7 @@ import org.apache.spark.sql.functions._
 
 object BPMgoSpkProxyImpl {
 
-    val yarnJars: String = "hdfs://spark.master:9000/jars/sparkJars"
+    val yarnJars: String = "hdfs://spark.master:8020/jars/sparkJars"
 
     lazy val mongoHost = System.getProperty("MONGO_HOST")
     lazy val mongoPort = System.getProperty("MONGO_PORT")
@@ -42,8 +42,8 @@ object BPMgoSpkProxyImpl {
             "collection" -> "cal"))
 
         val cal_data = spark.read.mongo(cal_data_rc).filter(col("job_id") === job_id).drop(col("_id"))
-        cal_data.write.parquet("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + job_id + "/input/" + "cal_data")
-//        cal_data.write.json("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + job_id + "/json/" + "cal_data")
+        cal_data.write.parquet("hdfs://192.168.100.137:8020/tmtest0831/jobs/" + job_id + "/input/" + "cal_data")
+//        cal_data.write.json("hdfs://192.168.100.137:8020/tmtest0831/jobs/" + job_id + "/json/" + "cal_data")
 
         val cal_comp_rc = ReadConfig(Map(
             "uri" -> ("mongodb://" + mongoHost + ":" + mongoPort + "/"),
@@ -51,8 +51,8 @@ object BPMgoSpkProxyImpl {
             "collection" -> "cal_comp"))
 
         val cal_comp = spark.read.mongo(cal_comp_rc).filter(col("job_id") === job_id).drop(col("_id"))
-        cal_comp.write.parquet("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + job_id + "/input/" + "cal_comp")
-//        cal_comp.write.json("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + job_id + "/json/" + "cal_comp")
+        cal_comp.write.parquet("hdfs://192.168.100.137:8020/tmtest0831/jobs/" + job_id + "/input/" + "cal_comp")
+//        cal_comp.write.json("hdfs://192.168.100.137:8020/tmtest0831/jobs/" + job_id + "/json/" + "cal_comp")
 
         job_id
     }
@@ -65,7 +65,7 @@ object BPMgoSpkProxyImpl {
                                  phase: Int = 0): Unit = {
 
         val spark = SparkSession.builder().config(conf).getOrCreate()
-        val df_cal = spark.read.parquet("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + jobId + "/output/" + "cal_report")
+        val df_cal = spark.read.parquet("hdfs://192.168.100.137:8020/tmtest0831/jobs/" + jobId + "/output/" + "cal_report")
         df_cal.write
             .format("com.mongodb.spark.sql.DefaultSource")
             .option("spark.mongodb.output.uri", s"${mongoUri + destDatabase}")
@@ -73,7 +73,7 @@ object BPMgoSpkProxyImpl {
             .mode("append")
             .save()
 
-        val df_comp = spark.read.parquet("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + jobId + "/output/" + "competitor")
+        val df_comp = spark.read.parquet("hdfs://192.168.100.137:8020/tmtest0831/jobs/" + jobId + "/output/" + "competitor")
         df_comp.write
             .format("com.mongodb.spark.sql.DefaultSource")
             .option("spark.mongodb.output.uri", s"${mongoUri + destDatabase}")
@@ -81,7 +81,7 @@ object BPMgoSpkProxyImpl {
             .mode("append")
             .save()
 
-        val df_summary = spark.read.parquet("hdfs://192.168.100.137:9000/tmtest0831/jobs/" + jobId + "/output/" + "summary")
+        val df_summary = spark.read.parquet("hdfs://192.168.100.137:8020/tmtest0831/jobs/" + jobId + "/output/" + "summary")
         df_summary.write
             .format("com.mongodb.spark.sql.DefaultSource")
             .option("spark.mongodb.output.uri", s"${mongoUri + destDatabase}")
