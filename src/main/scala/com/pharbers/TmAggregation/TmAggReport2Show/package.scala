@@ -57,7 +57,7 @@ package object TmAggReport2Show {
         if ( phase > 0 ) {
             // 拆分规则
             val splitRules: DBObject => Boolean = db =>
-                db.getAs[String]("product").get == "开拓来" &&
+                db.getAs[String]("product").get == "开浦兰" &&
                         db.getAs[String]("category").get == "Hospital" &&
                         List("会南市五零一医院", "省人民医院", "会东市医科大学附属第二医院").contains(db.get("hospital"))
 

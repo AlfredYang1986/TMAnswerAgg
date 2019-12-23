@@ -165,7 +165,7 @@ package object NTMIOAggregation {
             builder += "product" -> p.get("name")
             builder += "life_cycle" -> p.get("lifeCycle")
             builder += "product_area" -> p.get("treatmentArea")
-            if (p.get("name") == "开拓来") builder += "status" -> "已开发"
+            if (p.get("name") == "开浦兰") builder += "status" -> "已开发"
             else builder += "status" -> "未开发"
 
             builder += "quota" -> x.get("salesTarget")
@@ -418,64 +418,64 @@ package object NTMIOAggregation {
 
         builder.result()
     }
-    
+
     def calReport2Report(hosps: List[DBObject],
                          products: List[DBObject],
                          resources: List[DBObject],
                          calReport: List[DBObject],
                          phase: Int,
                          periodId: String, projectId: String): (List[DBObject], List[DBObject], List[DBObject]) = {
-        
+
         def queryProportion(molecule: Double, denominator: Double): Double = {
             if (denominator == 0.0 || molecule == 0.0) { 0.0 }
             else molecule / denominator
         }
-        
+
         def queryHospitalId(name: String): String =
             hosps.find(_.getAs[String]("name").get == name) match {
                 case Some(o) => o.getAs[ObjectId]("_id").get.toString
                 case None => ""
             }
-        
+
         def queryProductId(name: String): String =
             products.find(_.getAs[String]("name").get == name) match {
                 case Some(o) => o.getAs[ObjectId]("_id").get.toString
                 case None => ""
             }
-        
+
         def queryResourceId(name: String): String =
             resources.find(_.getAs[String]("name").get == name) match {
                 case Some(o) => o.getAs[ObjectId]("_id").get.toString
                 case None => ""
             }
-        
+
         def groupByHospitalAgg() = {
             val groupProduct = calReport.groupBy(cr => (cr.get("product").toString))
-            
+
             calReport.map { hosp =>
                 val achievements = queryProportion(hosp.getAsOrElse[Double]("sales", 0.0),
                     hosp.getAsOrElse[Double]("quota", 0.0))
                 val sumQuota = groupProduct.get(hosp.get("product").toString).get.map(_.getAsOrElse[Double]("quota", 0.0)).sum
                 val sumSales = groupProduct.get(hosp.get("product").toString).get.map(_.getAsOrElse[Double]("sales", 0.0)).sum
-                
+
                 val quotaContri = queryProportion(hosp.getAsOrElse[Double]("quota", 0.0), sumQuota)
-    
+
                 val salesContri = queryProportion(hosp.getAsOrElse[Double]("sales", 0.0), sumSales)
-    
+
                 val salesGrowthMOM = queryProportion(hosp.getAsOrElse[Double]("sales", 0.0),
                     hosp.getAsOrElse[Double]("p_sales", 0.0)) - 1
-    
+
                 val salesGrowthYOY = queryProportion(hosp.getAsOrElse[Double]("sales", 0.0),
                     hosp.getAsOrElse[Double]("pppp_sales", 0.0)) - 1
-    
+
                 val quotaGrowthMOM = queryProportion(hosp.getAsOrElse[Double]("quota", 0.0),
                     hosp.getAsOrElse[Double]("p_sales", 0.0)) - 1
-    
+
                 val share = hosp.getAs[Double]("market_share") match {
                     case Some(s) => s
                     case None => hosp.getAsOrElse[Double]("share", 0.0)
                 }
-    
+
                 val builder = MongoDBObject.newBuilder
                 builder += "__v" -> 0
                 builder += "achievements" -> achievements // sales / quota
@@ -507,7 +507,7 @@ package object NTMIOAggregation {
                 builder.result()
             }
         }
-    
+
         def groupByProductAgg() = {
             val sumQouta = calReport.map(_.getAsOrElse[Double]("quota", 0.0)).sum
             val sumSales = calReport.map(_.getAsOrElse[Double]("sales", 0.0)).sum
@@ -522,7 +522,7 @@ package object NTMIOAggregation {
 	            val salesGrowthYOY = queryProportion(sales, data._2.map(_.getAsOrElse[Double]("pppp_sales", 0.0)).sum) - 1
                 val quotaGrowthMOM = queryProportion(quota, data._2.map(_.getAsOrElse[Double]("p_sales", 0.0)).sum) - 1
 	            val share = queryProportion(sales, potential)
-                
+
                 val builder = MongoDBObject.newBuilder
                 builder += "__v" -> 0
                 builder += "achievements" -> achievements // sales / quota
@@ -554,10 +554,10 @@ package object NTMIOAggregation {
                 builder.result()
             }
         }
-       
+
         def groupByResourceAgg() = {
             val groupProduct = calReport.groupBy(cr => (cr.get("product").toString))
-            
+
             val resource_data = calReport.groupBy(cr => (cr.get("representative"),
                     cr.get("product"),
                     cr.get("work_motivation"),
@@ -565,11 +565,11 @@ package object NTMIOAggregation {
                     cr.get("sales_skills"),
                     cr.get("product_knowledge"),
                     cr.get("behavior_efficiency"))).toList
-            
+
             resource_data.map { rd => {
                 val sumQuota = groupProduct.get(rd._1._2.toString).get.map(_.getAsOrElse[Double]("quota", 0.0)).sum
                 val sumSales = groupProduct.get(rd._1._2.toString).get.map(_.getAsOrElse[Double]("sales", 0.0)).sum
-                
+
                 val sales = rd._2.map(_.getAsOrElse[Double]("sales", 0.0)).sum
                 val quota = rd._2.map(_.getAsOrElse[Double]("quota", 0.0)).sum
                 val potential = rd._2.map(_.getAsOrElse[Double]("potential", 0.0)).sum
@@ -580,7 +580,7 @@ package object NTMIOAggregation {
                 val salesGrowthYOY = queryProportion(sales, rd._2.map(_.getAsOrElse[Double]("pppp_sales", 0.0)).sum) - 1
                 val quotaGrowthMOM = queryProportion(quota, rd._2.map(_.getAsOrElse[Double]("p_sales", 0.0)).sum) - 1
                 val share = queryProportion(sales, potential)
-                
+
                 val builder = MongoDBObject.newBuilder
                 builder += "__v" -> 0
                 builder += "achievements" -> achievements // sales / quota
@@ -611,11 +611,11 @@ package object NTMIOAggregation {
                 builder += "workMotivation" -> rd._1._3
                 builder.result()
             }}
-            
+
         }
-    
+
         (groupByHospitalAgg(), groupByProductAgg() ,groupByResourceAgg())
-        
+
     }
 
     /**
@@ -635,35 +635,35 @@ package object NTMIOAggregation {
         bulk.execute()
         jobId
     }
-    
+
     /**
       * collection => cal_report to reports
       */
     def TmResultAgg(proposalId: String, projectId: String, periodId: String): String = {
         val jobId = UUID.randomUUID().toString
         val (hosps, products, resources) = infoWithProposal(proposalId)
-        
+
         val bulk = collReports.initializeOrderedBulkOperation
         val builder = MongoDBObject.newBuilder
-        
+
         builder += "period_id" ->  periodId
         builder += "project_id" -> projectId
         val calReports = collCalReport.find(builder.result).toList
-    
+
         // emmm
         val projectCondition = MongoDBObject.newBuilder
         projectCondition += "_id" -> new ObjectId(projectId)
-    
+
         val periods = collProject.findOne(projectCondition.result) match {
             case Some(dbo) => dbo.getAs[List[ObjectId]]("periods").get // 哇  数据库为啥是ObjectId哦
             case None => Nil
         }
-    
+
         val presetCondition = MongoDBObject.newBuilder
         presetCondition += "proposalId" -> projectId
-	    
+
         val presets = collPreset.find(presetCondition.result).toList
-        
+
         val result = calReport2Report(hosps, products,
                         resources, calReports,
                         periods.indexOf(new ObjectId(periodId)),
@@ -671,7 +671,7 @@ package object NTMIOAggregation {
         result._1 foreach(bulk.insert(_))
         result._2 foreach(bulk.insert(_))
         result._3 foreach(bulk.insert(_))
-	    
+
         bulk.execute()
         jobId
     }

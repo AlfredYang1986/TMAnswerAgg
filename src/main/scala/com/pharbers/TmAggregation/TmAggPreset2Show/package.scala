@@ -171,7 +171,7 @@ package object TmAggPreset2Show {
         products.find(x => x.get("_id") == report.get("product")) match {
             case Some(r) => {
                 builder += "product_area" -> r.get("treatmentArea")
-                builder += "status" -> (if (r.get("name") == "开拓来") "已开发" else "未开发")
+                builder += "status" -> (if (r.get("name") == "开浦兰") "已开发" else "未开发")
             }
             case None => {
                 builder += "product_area" -> ""
