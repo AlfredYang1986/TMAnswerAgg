@@ -6,9 +6,9 @@ import com.pharbers.TmAggregation.TmAggMongoHandler.AggCollEnum.AggCollEnum
 object AggMongoOpt {
 
 //    lazy val mongodbHost = System.getProperty("MONGO_HOST")
-    lazy val mongodbHost = "pharbers.com"
+    lazy val mongodbHost = "192.168.100.14"
 //    lazy val mongodbPort = System.getProperty("MONGO_PORT").toInt
-    lazy val mongodbPort = 5555
+    lazy val mongodbPort = 30010
     lazy val mongodbUsername = ""
     lazy val mongodbPassword = ""
 //    lazy val ntmDBName = System.getProperty("MONGO_DEST")

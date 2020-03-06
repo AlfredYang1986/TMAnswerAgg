@@ -10,7 +10,7 @@ import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.{DefaultHttpClient, HttpClients}
 
 object BPEsSpkProxyImpl {
-    val yarnJars: String = "hdfs://spark.master:8020/jars/sparkJars"
+    val yarnJars: String = "hdfs://192.168.100.14:8020/jars/sparkJars"
 
     lazy val esHost: String = System.getProperty("ES_HOST")
     lazy val esPort: String = System.getProperty("ES_PORT")
@@ -34,7 +34,7 @@ object BPEsSpkProxyImpl {
         conf.set("es.port", esPort)
 
         val ss = SparkSession.builder().config(conf).getOrCreate()
-        ss.sparkContext.addJar("hdfs://spark.master:8020/jars/context/elasticsearch-hadoop-7.2.0.jar")
+        ss.sparkContext.addJar("hdfs://192.168.100.14:8020/jars/context/elasticsearch-hadoop-7.2.0.jar")
         ss.sparkContext.makeRDD(data).saveToEs(index)
     }
 
