@@ -23,7 +23,7 @@
                 <scalaBinaryVersion>2.11</scalaBinaryVersion>
                 <spark.version>2.3.0</spark.version>
                 <spark.mongo.connector.version>2.3.2</spark.mongo.connector.version>
-                <hadoop.version>2.7.2</hadoop.version>
+                <hadoop.version>2.10.1</hadoop.version>
                 <scalatest.version>3.0.1</scalatest.version>
                 <log4j.version>2.11.2</log4j.version>
                 <es.version>7.2.0</es.version>
